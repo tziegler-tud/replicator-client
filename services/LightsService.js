@@ -49,7 +49,7 @@ class LightsService {
     async init(){
         let self = this;
         console.log("Initializing LightsService...");
-        this.BridgeUrl = "192.168.1.115";
+        this.BridgeUrl = "192.168.1.116";
         this.Bridge = undefined;
         //try to reach the bridge
         try {
@@ -62,7 +62,13 @@ class LightsService {
                 let discoveredIpAddress = await discoverBridgeIp();
                 console.log("Bridge found! IP Adress is: " + discoveredIpAddress);
                 self.BridgeUrl = discoveredIpAddress;
-                this.Bridge = await verifyBridge(self.BridgeUrl);
+                verifyBridge(self.BridgeUrl)
+                    .then(result => {
+                        self.Bridge = result;
+                    })
+                    .catch(err => {
+                        throw new Error(e);
+                    })
             }
             catch(err){
                 console.warn("Failed to find Hue Bridge. Is your Bridge connected?");
