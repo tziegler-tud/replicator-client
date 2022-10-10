@@ -1,7 +1,7 @@
 const { Picovoice } = require("@picovoice/picovoice-node");
 const PvRecorder = require("@picovoice/pvrecorder-node");
 
-const picoVoiceConfig = require("../config/picovoice.json");
+const picoVoiceConfig = require("../config/picovoice2.json");
 const VoiceCommandService = require("./voiceCommandService");
 
 const LightsService = require("./LightsService");

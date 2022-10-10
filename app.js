@@ -97,6 +97,8 @@ const locationManager = new LocationManager(intentManager);
 
 let bedroom = locationManager.addLocation("bedroom", -1);
 bedroom.addLightGroup("Schlafzimmer");
+const devices = PvRecorder.getAudioDevices();
+console.log(devices);
 bedroom.addRecorder(-1);
 bedroom.start();
 
