@@ -12,7 +12,7 @@ class LightsService {
         this.init = this.init()
             .then()
             .catch(err=> {
-               throw new Error(err)
+               process.exit();
             });
         LightsService.setInstance(this);
     }
