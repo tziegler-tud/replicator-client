@@ -49,7 +49,7 @@ class LightsService {
     async init(){
         let self = this;
         console.log("Initializing LightsService...");
-        this.BridgeUrl = "192.168.1.116";
+        this.BridgeUrl = "192.168.1.115";
         this.Bridge = undefined;
         //try to reach the bridge
         try {
