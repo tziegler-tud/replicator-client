@@ -15,7 +15,6 @@
     "http-errors": "~1.6.3",
     "js-yaml": "^4.1.0",
     "morgan": "~1.9.1",
-    "node-sass-middleware": "^1.0.1",
     "pug": "2.0.0-beta11"
   }
 }
