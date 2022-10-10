@@ -9,7 +9,11 @@ class LightsService {
         this.BridgeUrl = BridgeUrl;
         this.BridgeUser = BridgeUser;
 
-        this.init = this.init();
+        this.init = this.init()
+            .then()
+            .catch(err=> {
+               throw new Error(err)
+            });
         LightsService.setInstance(this);
     }
     static _instance;
