@@ -9,15 +9,12 @@
     "@picovoice/picovoice-node": "^2.1.8",
     "@picovoice/porcupine-node": "^2.1.7",
     "@picovoice/pvrecorder-node": "^1.1.0",
-    "apa102-spi": "^0.0.6",
-    "bluebird": "^3.7.2",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
     "js-yaml": "^4.1.0",
     "morgan": "~1.9.1",
-    "pug": "2.0.0-beta11",
-    "rpio": "^2.4.2"
+    "pug": "2.0.0-beta11"
   }
 }
