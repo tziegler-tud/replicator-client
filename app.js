@@ -98,13 +98,14 @@ const locationManager = new LocationManager(intentManager);
 let bedroom = locationManager.addLocation("bedroom", -1);
 bedroom.addLightGroup("Schlafzimmer");
 const devices = PvRecorder.getAudioDevices();
-console.log(devices);
-bedroom.addRecorder(-1);
-bedroom.start();
+// console.log(devices);
+// bedroom.addRecorder(-1);
+// bedroom.start();
 
 let livingroom = locationManager.addLocation("living room", -1);
 livingroom.addLightGroup("Wohnzimmer");
-
+livingroom.addRecorder(-1);
+livingroom.start();
 
 
 module.exports = app;
