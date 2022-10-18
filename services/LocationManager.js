@@ -52,8 +52,8 @@ class LocationManager {
      * @param recorder {Integer}
      * @returns {Location}
      */
-    addLocation(identifier, recorder) {
-        let location = new Location(identifier, recorder);
+    addLocation(identifier) {
+        let location = new Location(identifier);
 
         this.locations.push(location);
         return location;

@@ -37,7 +37,7 @@ changeLightState.push(stateAll);
 const location = new IntentHandler();
 location.addVariable("state", "state", IntentHandler.EXPECTATION.FORBIDDEN);
 location.addVariable("location", "location", IntentHandler.EXPECTATION.OPTIONAL);
-stateAll.addVariable("lightSelect", "lightSelect", IntentHandler.EXPECTATION.FORBIDDEN);
+location.addVariable("lightSelect", "lightSelect", IntentHandler.EXPECTATION.FORBIDDEN);
 location.setHandlerFunction(function(variables, location, handler){
     //toggle state of lights in the given location
     if(variables.location){
@@ -63,10 +63,16 @@ h1.setHandlerFunction(function(variables, location, handler){
     if(variables.location) {
         location = LocationManager.getInstance().getLocation(variables.location);
     }
+    let lights = location.getLightsByAlias(variables.lightSelect)
     if(variables.state) {
-        lightsService.setLightStateByName(variables.lightSelect, variables.state)
+        lights.forEach(light=>{
+            lightsService.setLightState(light.id, variables.state)
+        });
     }
-    else lightsService.toggleLightStateByName(variables.lightSelect);
+    else
+        lights.forEach(light=>{
+            lightsService.toggleLightState(light.id);
+        });
 
 })
 changeLightState.push(h1);

@@ -11,6 +11,7 @@
 class VoiceCommandService {
     constructor(intentManager){
         this.intentManager = intentManager;
+        this.mutex = false;
         VoiceCommandService.setInstance(this);
         return this;
     }
@@ -37,6 +38,13 @@ class VoiceCommandService {
     static setInstance(instance) {
         this._instance = instance;
         return this._instance;
+    }
+
+    processKeyword(keyword, location) {
+        //check if location has LEDs
+        if(location.ledInterface.isActive) {
+            location.ledInterface.play("wake");
+        }
     }
 
     /**

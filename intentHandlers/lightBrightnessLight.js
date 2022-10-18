@@ -18,14 +18,17 @@ h1.setHandlerFunction(function(variables, location, handler){
     let defaults = {
         setValue: "set",
         toBy: "by",
-        percent: "20%",
+        percent: "20",
     }
     variables = Object.assign(defaults, variables);
     let parsedVars = parseVariables(variables)
     if(variables.location) {
         location = LocationManager.getInstance().getLocation(variables.location);
     }
-    lightsService.setLightBrightnessByName(parsedVars.lightSelect, parsedVars.percentValue, parsedVars.isRelative)
+    let lights = location.getLightsByAlias(variables.lightSelect)
+    lights.forEach(light => {
+        lightsService.setLightBrightness(light.id, parsedVars.percentValue, parsedVars.isRelative)
+    })
 })
 lightBrightnessLight.push(h1);
 
@@ -47,11 +50,19 @@ h2.setHandlerFunction(function(variables, location, handler){
     if(variables.location) {
         location = LocationManager.getInstance().getLocation(variables.location);
     }
-    lightsService.setLightBrightnessByName(parsedVars.lightSelect, parsedVars.minmax, parsedVars.isRelative)
+    let lights = location.getLightsByAlias(variables.lightSelect)
+    lights.forEach(light => {
+        lightsService.setLightBrightness(light.id, parsedVars.minmax, parsedVars.isRelative)
+    })
 })
 lightBrightnessLight.push(h2);
 
 
+/**
+ *
+ * @param variables
+ * @returns {{percentValue: number, isRelative: boolean, minmax: number}}
+ */
 function parseVariables(variables){
     let defaults = {
         toBy: "by",
@@ -65,6 +76,7 @@ function parseVariables(variables){
     //     console.warn("lightBrightness: Failed to parse input variables. Applying default vars to missing fields...");
     // }
     variables = Object.assign(defaults, variables);
+    variables.percent = parseInt(variables.percent);
     let parsedVars = {
         isRelative: true,
         percentValue: variables.percent,

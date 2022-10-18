@@ -117,6 +117,11 @@ function setBrightnessAllGroups(lightGroupArray, percentValue, isRelative){
     return true;
 }
 
+/**
+ *
+ * @param variables
+ * @returns {{percentValue: number, isRelative: boolean, minmax: number}}
+ */
 function parseVariables(variables){
     let defaults = {
         toBy: "by",
@@ -129,9 +134,11 @@ function parseVariables(variables){
     //     console.warn("lightBrightness: Failed to parse input variables. Applying default vars to missing fields...");
     // }
     variables = Object.assign(defaults, variables);
+    variables.percent = parseInt(variables.percent);
     let parsedVars = {
         isRelative: true,
         percentValue: variables.percent,
+        minmax: undefined,
     }
 
     switch(variables.toBy) {

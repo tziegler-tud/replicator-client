@@ -3,6 +3,7 @@ const PvRecorder = require("@picovoice/pvrecorder-node");
 
 const picoVoiceConfig = require("../config/picovoice2.json");
 const VoiceCommandService = require("./voiceCommandService");
+const LedInterface = require("./LedInterface.js");
 
 const LightsService = require("./LightsService");
 const lightsService = LightsService.getInstance();
@@ -33,11 +34,18 @@ class Location {
         this.recorder = undefined;
         this.voiceCommandService = VoiceCommandService.getInstance();
         this.picoVoiceConfig = picoVoiceConfig;
+        this.ledInterface = {};
 
         /** @type {LightGroupObject[]} */
         this.lightGroups = [];
+        this.lights = [];
     }
 
+    addLedInterface(ledAmount){
+        let self = this;
+        this.ledInterface = new LedInterface(ledAmount);
+
+    }
 
 
     addRecorder(recorderDeviceIndex) {
@@ -47,6 +55,7 @@ class Location {
         }
         const keywordCallback = function (keyword) {
             console.log(`wake word detected for location: ` + self.identifier);
+            self.voiceCommandService.processKeyword(keyword, self);
         };
 
         const inferenceCallback = function (inference) {
@@ -110,6 +119,22 @@ class Location {
             .catch(e => {
                 return false
             });
+    }
+
+    addLight(lightName, aliases) {
+        lightsService.getLightIdByName(lightName)
+            .then(id => {
+                let o = {id: id, name: lightName, aliases: aliases};
+                this.lights.push(o);
+                return o;
+            })
+            .catch(e => {
+                return false
+            });
+    }
+
+    getLightsByAlias(alias){
+        return this.lights.filter(light => light.aliases.includes(alias));
     }
 }
 

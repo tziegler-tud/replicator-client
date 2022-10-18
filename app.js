@@ -104,7 +104,11 @@ const devices = PvRecorder.getAudioDevices();
 
 let livingroom = locationManager.addLocation("living room", -1);
 livingroom.addLightGroup("Wohnzimmer");
+livingroom.addLight("Stehlampe", ["floor lamp", "floor light", "reading light", "reading lamp"]);
+livingroom.addLight("Esstisch", ["main light", "main light", "ceiling light"]);
+livingroom.addLight("Schreibtisch", ["desk lamp", "desk light"]);
 livingroom.addRecorder(-1);
+livingroom.addLedInterface(12);
 livingroom.start();
 
 
