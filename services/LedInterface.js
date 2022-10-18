@@ -57,7 +57,7 @@ LedInterface.prototype.generateLedBuffer = function(){
 
 LedInterface.prototype.generateWriteBuffer = function(){
     this.ledBuffer = this.generateLedBuffer();
-    this.writeBuffer = Buffer.concat([this.startFrame, this.writeBuffer, this.endFrame], this.bufferLength);
+    this.writeBuffer = Buffer.concat([this.startFrame, this.ledBuffer, this.endFrame], this.bufferLength);
     return this.writeBuffer;
 }
 
