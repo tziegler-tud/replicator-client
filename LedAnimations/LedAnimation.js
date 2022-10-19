@@ -3,6 +3,7 @@ class LedAnimation {
         this.title = title;
         this.minAmount = minAmount;
         this.animation = function(){};
+        this.active = false;
     }
 
     /**
@@ -12,9 +13,11 @@ class LedAnimation {
      */
     play(ledInterface, args) {
         //play this animation
+        this.active = true;
         this.animation(ledInterface, args, this);
     }
     stop(ledInterface) {
+        this.active = false;
         ledInterface.clearAll();
     }
 

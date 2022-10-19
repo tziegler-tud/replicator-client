@@ -1,5 +1,9 @@
 var rpio = require('rpio');
-var {ready, wake} = require("../LedAnimations/animations.js")
+var animations = require("../LedAnimations/animations.js")
+
+rpio.init( {
+    gpiomem: false,
+})
 
 /**
  * class LedInterface
@@ -10,33 +14,39 @@ var {ready, wake} = require("../LedAnimations/animations.js")
 function LedInterface (ledAmount, clockDivider) {
     let self = this;
     this.isActive = false;
-    clockDivider = typeof clockDivider !== 'undefined' ? clockDivider : 200
-    let ledBufferLength = ledAmount * 4;
-    this.ledBuffer = Buffer.alloc(ledBufferLength, 'E0000000', 'hex')
-    this.bufferLength = 4 + ledBufferLength + 4;
-    this.startFrame = Buffer.alloc(4, '00000000', 'hex');
-    this.endFrame = Buffer.alloc(4, 'ff', 'hex')
+    this.ledAmount = ledAmount;
+    this.clockDivider = clockDivider !== undefined ? clockDivider : 128
 
     this.leds = []
-    for (let i = 0; i++; i<ledAmount) {
-        self.leds.push(new Led(i));
-    }
+    this.init = this.init();
 
-    this.ledBuffer = this.generateLedBuffer();
-    this.writeBuffer = this.generateWriteBuffer();
 
-    rpio.init( {
-        gpiomem: false,
-    })
-    //set GPIO5 to high
-    rpio.open(29, rpio.OUTPUT, rpio.HIGH);
-    rpio.spiBegin();
-    rpio.spiChipSelect(0);
-    rpio.spiSetCSPolarity(0, rpio.LOW);
-    rpio.spiSetClockDivider(clockDivider);
-    this.isActive = true;
 }
 
+LedInterface.prototype.init = function(){
+    let self = this;
+    return new Promise(function(resolve, reject){
+        for (let i = 0;i<self.ledAmount; i++) {
+            self.leds.push(new Led(self, i));
+        }
+
+        let ledBufferLength = self.ledAmount * 4;
+        self.ledBuffer = Buffer.alloc(ledBufferLength, 'E0000000', 'hex')
+        self.bufferLength = 4 + ledBufferLength + 4;
+        self.startFrame = Buffer.alloc(4, '00000000', 'hex');
+        self.endFrame = Buffer.alloc(4, 'ff', 'hex')
+        self.ledBuffer = self.generateLedBuffer();
+        self.writeBuffer = self.generateWriteBuffer();
+        //set GPIO5 to high
+        rpio.open(29, rpio.OUTPUT, rpio.HIGH);
+        rpio.spiBegin();
+        rpio.spiChipSelect(1);
+        rpio.spiSetCSPolarity(0, rpio.LOW);
+        rpio.spiSetClockDivider(self.clockDivider);
+        self.isActive = true;
+        resolve(self);
+    })
+}
 
 LedInterface.prototype.close = function(){
     rpio.spiEnd();
@@ -61,22 +71,49 @@ LedInterface.prototype.generateWriteBuffer = function(){
     return this.writeBuffer;
 }
 
+LedInterface.prototype.writeRaw = function(){
+    // console.log("writing to interface")
+    rpio.spiWrite(this.writeBuffer, this.writeBuffer.length);
+}
+
+LedInterface.prototype.setBuffer = function(ledIndex, buffer) {
+    let pos = 4 + ledIndex * 4;
+    this.writeBuffer[pos] = buffer[0];
+    this.writeBuffer[pos+1] = buffer[1];
+    this.writeBuffer[pos+2] = buffer[2];
+    this.writeBuffer[pos+3] = buffer[3];
+}
+
 LedInterface.prototype.play = function(animationTitle){
+    if(this.interval) {
+        clearInterval(this.interval);
+        this.interval = undefined;
+    }
+    console.log("trying to playing animation: " + animationTitle)
     let self = this;
     switch(animationTitle) {
         case "ready":
-            ready.play(self,{})
+            animations.ready.play(self,{})
             break;
         case "wake":
-            wake.play(self, {})
+            animations.wake.play(self, {})
             break;
         case "understood":
             break;
         case "working":
+            animations.working.play(self, {})
             break;
         case "notunderstood":
+            animations.ready.play(self, {})
+            // animations.notunderstood.play(self, {})
             break;
         case "failed":
+            // animations.fail.play(self, {})
+            animations.ready.play(self, {})
+            break;
+        case "success":
+            // animations.success.play(self, {})
+            animations.ready.play(self, {})
             break;
     }
 }
@@ -94,8 +131,8 @@ LedInterface.prototype.setAll = function(args) {
     let color = args.color;
     let brightness = args.brightness;
     this.leds.forEach(function(led){
-        led.setColor(color);
-        led.setBrightness(brightness)
+        if(color) led.setColor(color);
+        if(brightness) led.setBrightness(brightness)
     })
 }
 
@@ -109,7 +146,8 @@ LedInterface.prototype.getLeds = function()  {
     return this.leds;
 }
 
-function Led (id) {
+function Led (ledInterface, id) {
+    this.ledInterface = ledInterface;
     this.id = id;
     this.color = {
         r: 0,
@@ -117,7 +155,7 @@ function Led (id) {
         b: 0,
     }
     this.state = false;
-    this.lastBrightness = 1;
+    this.lastBrightness = 0.1;
     this.brightness = 0;
     this.buffer = Buffer.alloc(4, 'E0000000', 'hex');
 
@@ -156,24 +194,27 @@ Led.prototype.on = function() {
 
 Led.prototype.off = function() {
    this.state = false;
+   this.brightness = 0;
    this.lastBrightness = this.brightness;
-   this.setBrightness(0);
-}
-
-
-Led.prototype.off = function() {
-    this.state = false;
-    this.setBrightness(this.brightness);
+   this.setBrightnessRaw(0);
 }
 
 Led.prototype.setBrightness = function(brightness) {
     if (brightness < 0) brightness = 0;
     if (brightness > 1) brightness = 1;
     this.brightness = brightness;
-    this.buffer[0] = this.getBrightnessRaw() | 0b11100000;
+    this.buffer[0] = this.getBrightnessValue() | 0b11100000;
 }
 
-Led.prototype.getBrightnessRaw = function() {
+Led.prototype.setBrightnessRaw = function(brightness) {
+    this.buffer[0] = brightness | 0b11100000;
+}
+
+Led.prototype.writeToInterface = function(){
+    this.ledInterface.setBuffer(this.id, this.buffer);
+}
+
+Led.prototype.getBrightnessValue = function() {
     return Math.ceil(this.brightness * 31);
 }
 

@@ -56,9 +56,15 @@ class VoiceCommandService {
         //check if understood
         if(!command.isUnderstood) {
             //not understood. nothing we can do
+            if(location.ledInterface.isActive) {
+                location.ledInterface.play("notunderstood");
+            }
             return false;
         }
         else {
+            if(location.ledInterface.isActive) {
+                location.ledInterface.play("working");
+            }
             //get intent
             let title = command.intent;
             //retrieve matching intent
@@ -76,7 +82,16 @@ class VoiceCommandService {
                 matchingHandlers.forEach(function(handler){
                     handler.run(command.slots, location)
                 })
+                if(location.ledInterface.isActive) {
+                    location.ledInterface.play("success");
+                }
 
+            }
+            else {
+                //no handler found
+                if(location.ledInterface.isActive) {
+                    location.ledInterface.play("failed");
+                }
             }
 
 

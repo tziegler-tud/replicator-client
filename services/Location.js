@@ -44,6 +44,14 @@ class Location {
     addLedInterface(ledAmount){
         let self = this;
         this.ledInterface = new LedInterface(ledAmount);
+        this.ledInterface.init
+            .then(ledIf=> {
+                console.log("LED interface set up for Location: " + self.identifier);
+                ledIf.play("ready");
+            })
+            .catch(err => {
+                console.warn(err);
+            })
 
     }
 
