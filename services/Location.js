@@ -1,7 +1,7 @@
 const { Picovoice } = require("@picovoice/picovoice-node");
 const PvRecorder = require("@picovoice/pvrecorder-node");
 
-const picoVoiceConfig = require("../config/picovoice2.json");
+const picoVoiceConfig = require("../config/picovoice-pi.json");
 const VoiceCommandService = require("./voiceCommandService");
 const LedInterface = require("./LedInterface.js");
 
@@ -47,7 +47,7 @@ class Location {
         this.ledInterface.init
             .then(ledIf=> {
                 console.log("LED interface set up for Location: " + self.identifier);
-                ledIf.play("ready");
+
             })
             .catch(err => {
                 console.warn(err);
@@ -91,6 +91,12 @@ class Location {
         async function startRecorder() {
             self.recorder.start();
             console.log("Listening for 'COMPUTER' in " + self.identifier + "...");
+            if(self.ledInterface.isActive){
+                self.ledInterface.play("setupComplete", {amount: 1})
+                    .then(function(){
+                        self.ledInterface.play("ready")
+                    })
+            }
             while (1) {
                 const frames = await self.recorder.read();
                 self.picovoice.process(frames);

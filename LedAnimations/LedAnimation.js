@@ -12,9 +12,14 @@ class LedAnimation {
      * @param args
      */
     play(ledInterface, args) {
+        let defaultArgs = {
+            amount: 0,
+        }
+        args = Object.assign(defaultArgs, args);
         //play this animation
         this.active = true;
-        this.animation(ledInterface, args, this);
+        this.amount = args.amount;
+        return this.animation(ledInterface, args, this);
     }
     stop(ledInterface) {
         this.active = false;

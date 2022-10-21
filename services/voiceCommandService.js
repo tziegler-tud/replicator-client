@@ -83,14 +83,20 @@ class VoiceCommandService {
                     handler.run(command.slots, location)
                 })
                 if(location.ledInterface.isActive) {
-                    location.ledInterface.play("success");
+                    location.ledInterface.play("success")
+                        .then(function(){
+                            location.ledInterface.play("ready")
+                        })
                 }
 
             }
             else {
                 //no handler found
                 if(location.ledInterface.isActive) {
-                    location.ledInterface.play("failed");
+                    location.ledInterface.play("failed")
+                        .then(function(){
+                            location.ledInterface.play("ready")
+                        })
                 }
             }
 

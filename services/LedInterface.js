@@ -92,28 +92,31 @@ LedInterface.prototype.play = function(animationTitle){
     console.log("trying to playing animation: " + animationTitle)
     let self = this;
     switch(animationTitle) {
+        case "setupComplete":
+            return animations.setup.play(self,{})
+            break;
         case "ready":
-            animations.ready.play(self,{})
+            return animations.ready.play(self,{})
             break;
         case "wake":
-            animations.wake.play(self, {})
+            return animations.wake.play(self, {})
             break;
         case "understood":
             break;
         case "working":
-            animations.working.play(self, {})
+            return animations.working.play(self, {})
             break;
         case "notunderstood":
-            animations.ready.play(self, {})
+            return animations.fail.play(self, {})
             // animations.notunderstood.play(self, {})
             break;
         case "failed":
             // animations.fail.play(self, {})
-            animations.ready.play(self, {})
+            return animations.fail.play(self, {})
             break;
         case "success":
             // animations.success.play(self, {})
-            animations.ready.play(self, {})
+            return animations.success.play(self, {})
             break;
     }
 }

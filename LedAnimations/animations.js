@@ -39,48 +39,137 @@ working.setAnimation(function(ledInterface, args, self){
             g: 0,
             b: 255,
         },
-        brightness: 0,
+        brightness: 0.1,
     })
     ledInterface.write();
-    // pulse(leds[0], 0, 0.2, 5000, 100,0)
-
-    // leds.forEach(function(led, index){
-    //     // pulse(led, 0, 0.2, 5000, 10,index*100)
-    //     // flash(led, 0.2, 0, 1000, 100,index*100)
-    // })
-    // let interval = setInterval(function(){
-    //     ledInterface.write();
-    //     // console.log("writing spi...")
-    // }, 50);
-    let circleFrames = circle(ledInterface, 5000, 500, 0, 1);
+    let circleFrames = circle(ledInterface, 0, 1);
     ledInterface.interval = setInterval(function(){
         circleFrames.nextFrame()
             .then(function(){
                 ledInterface.write();
             })
-    }, 200)
+    }, 100)
 })
 
-let clear = new LedAnimation("ready", 12);
-clear.setAnimation(function(ledInterface, args, self){
-    let leds = ledInterface.getLeds();
-    ledInterface.setAll({
-        color: {
-            r: 0,
-            g: 0,
-            b: 0,
-        },
-        brightness: 0,
-    });
-    ledInterface.write();
+let setup = new LedAnimation("setup", 1);
+setup.setAnimation(function(ledInterface, args, self){
+    return new Promise(function(resolve, reject){
+        let leds = ledInterface.getLeds();
+        let i = 0;
+        ledInterface.setAll({
+            color: {
+                r: 0,
+                g: 255,
+                b: 0,
+            },
+            brightness: 0,
+        })
+        ledInterface.write();
+        let fillingCircleFrames = fillingCircle(ledInterface, 0, 0.1);
+        ledInterface.interval = setInterval(function(){
+            fillingCircleFrames.nextFrame()
+                .then(function(){
+                    i++;
+                    ledInterface.write();
+                    if (i===ledInterface.ledAmount) {
+                        clearInterval(ledInterface.interval);
+                        setTimeout(function(){
+                            resolve();
+                        },1000);
+                    }
+                })
+        }, 100)
+    })
 })
 
+let success = new LedAnimation("success", 1);
+success.setAnimation(function(ledInterface, args, self){
+    return new Promise(function(resolve, reject){
+        let leds = ledInterface.getLeds();
+        let i = 0;
+        ledInterface.setAll({
+            color: {
+                r: 0,
+                g: 255,
+                b: 0,
+            },
+            brightness: 0,
+        })
+        ledInterface.write();
+        let fillingCircleFrames = fillingCircle(ledInterface, 0, 0.1);
+        ledInterface.interval = setInterval(function(){
+            fillingCircleFrames.nextFrame()
+                .then(function(){
+                    i++;
+                    ledInterface.write();
+                    if (i===ledInterface.ledAmount) {
+                        clearInterval(ledInterface.interval);
+                        setTimeout(function(){
+                            resolve();
+                        },500);
+                    }
+                })
+        }, 50)
+    })
+})
+
+
+let fail = new LedAnimation("fail", 1);
+fail.setAnimation(function(ledInterface, args, self){
+    return new Promise(function(resolve, reject){
+        let leds = ledInterface.getLeds();
+        let i = 0;
+        ledInterface.setAll({
+            color: {
+                r: 255,
+                g: 0,
+                b: 0,
+            },
+            brightness: 0.2,
+        })
+        ledInterface.write();
+        clear(ledInterface,200);
+        setAll(ledInterface, {color: {
+                r: 255,
+                g: 0,
+                b: 0,
+            },
+            brightness: 0.2,},
+            400)
+        clear(ledInterface,600);
+        setTimeout(function(){
+            resolve();
+        },800)
+    })
+})
 
 animations.ready = ready;
 animations.wake = wake;
 animations.working = working;
-// animations.success = success;
-// animations.fail = fail;
+animations.setup = setup;
+animations.success = success;
+animations.fail = fail;
+
+
+var clear = function(ledInterface, delay){
+    setTimeout(function(){
+        ledInterface.setAll({
+            color: {
+                r: 0,
+                g: 0,
+                b: 0,
+            },
+            brightness: 0,
+        });
+        ledInterface.write();
+    }, delay);
+}
+var setAll = function(ledInterface, setObject, delay){
+    setTimeout(function(){
+        ledInterface.setAll(setObject);
+        ledInterface.write();
+    }, delay);
+}
 
 var pulse = function(led, startBrightness, endBrightness, cyclePeriod, stepDuration, startDelay){
     let minStep = 10;
@@ -118,12 +207,13 @@ var flash = function(led, startBrightness, endBrightness,  cyclePeriod, duration
     }, startDelay)
 }
 
-var circle = function(ledInterface, cyclePeriod, duration, startBrightness, endBrightness){
+var circle = function(ledInterface, startBrightness, endBrightness){
     let index = 0;
     let maxIndex = ledInterface.ledAmount -1;
     let leds = ledInterface.getLeds();
     let range = endBrightness - startBrightness;
     let step = range / 2;
+    ledInterface.setAll({color:{r:0,g:0,b:255}, brightness: 0});
 
     function left(index, amount) {
         let val = index - amount;
@@ -135,12 +225,41 @@ var circle = function(ledInterface, cyclePeriod, duration, startBrightness, endB
     return {
         nextFrame: function(){
             return new Promise(function(resolve, reject){
-                ledInterface.setAll({color:{r:0,g:0,b:0}, brightness: 0});
+                // ledInterface.setAll({color:{r:0,g:0,b:0}, brightness: 0});
                 index = (index+1) % (maxIndex+1);
                 //enable two left and right as well
                 leds[index].setBrightness(endBrightness);
                 leds[(index +1) % (maxIndex +1)].setBrightness(endBrightness - step);
                 leds[left(index,1)].setBrightness(endBrightness - step);
+                //clear previous
+                leds[left(index, 2)].setBrightness(startBrightness);
+                resolve()
+            });
+        }
+    }
+}
+
+var fillingCircle =  function(ledInterface, startBrightness, endBrightness){
+    let index = 0;
+    let maxIndex = ledInterface.ledAmount -1;
+    let leds = ledInterface.getLeds();
+    let range = endBrightness - startBrightness;
+    let step = range / 2;
+    // ledInterface.setAll({color:{r:0,g:0,b:255}, brightness: 0});
+
+    function left(index, amount) {
+        let val = index - amount;
+        if(val >= 0) return val
+        else return maxIndex - amount +1;
+
+    }
+
+    return {
+        nextFrame: function(){
+            return new Promise(function(resolve, reject){
+                index = (index+1) % (maxIndex+1);
+                //enable two left and right as well
+                leds[index].setBrightness(endBrightness);
                 resolve()
             });
         }
