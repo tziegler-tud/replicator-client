@@ -1,4 +1,4 @@
-const LedAnimation = require("./LedAnimation.js");
+import LedAnimation from "./LedAnimation.js";
 var animations = {}
 
 let ready = new LedAnimation("ready", 12);
@@ -17,38 +17,44 @@ ready.setAnimation(function(ledInterface, args, self){
 
 let wake = new LedAnimation("wake", 12);
 wake.setAnimation(function(ledInterface, args, self){
-    let leds = ledInterface.getLeds();
-    ledInterface.setAll({
-        color: {
-            r: 0,
-            g: 0,
-            b: 255,
-        },
-        brightness: 0.1,
-    });
-    ledInterface.write();
+    return new Promise(function(resolve, reject){
+        let leds = ledInterface.getLeds();
+        ledInterface.setAll({
+            color: {
+                r: 0,
+                g: 0,
+                b: 255,
+            },
+            brightness: 0.1,
+        });
+        ledInterface.write();
+    })
+
 })
 
-let working = new LedAnimation("wake", 12);
+let working = new LedAnimation("working", 12);
 working.setAnimation(function(ledInterface, args, self){
-    let leds = ledInterface.getLeds();
-    let i = 0;
-    ledInterface.setAll({
-        color: {
-            r: 0,
-            g: 0,
-            b: 255,
-        },
-        brightness: 0.1,
-    })
-    ledInterface.write();
-    let circleFrames = circle(ledInterface, 0, 1);
-    ledInterface.interval = setInterval(function(){
-        circleFrames.nextFrame()
-            .then(function(){
-                ledInterface.write();
-            })
-    }, 100)
+    return new Promise(function(resolve, reject){
+        let leds = ledInterface.getLeds();
+        let i = 0;
+        ledInterface.setAll({
+            color: {
+                r: 0,
+                g: 0,
+                b: 255,
+            },
+            brightness: 0.1,
+        })
+        ledInterface.write();
+        let circleFrames = circle(ledInterface, 0, 1);
+        ledInterface.interval = setInterval(function(){
+            circleFrames.nextFrame()
+                .then(function(){
+                    ledInterface.write();
+                })
+        }, 100)
+    });
+
 })
 
 let setup = new LedAnimation("setup", 1);
@@ -265,4 +271,5 @@ var fillingCircle =  function(ledInterface, startBrightness, endBrightness){
         }
     }
 }
-module.exports = animations;
+
+export default animations;

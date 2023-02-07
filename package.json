@@ -5,17 +5,25 @@
   "scripts": {
     "start": "node ./bin/www"
   },
+  "bin": {
+    "www": "./bin/www.js"
+  },
+  "type": "module",
   "dependencies": {
     "@picovoice/picovoice-node": "^2.1.8",
     "@picovoice/porcupine-node": "^2.1.7",
-    "@picovoice/pvrecorder-node": "^1.1.0",
+    "@picovoice/pvrecorder-node": "1.1.2",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
     "js-yaml": "^4.1.0",
+    "mongoose": "^6.8.3",
     "morgan": "~1.9.1",
+    "node-fetch": "^3.3.0",
     "pug": "2.0.0-beta11",
-    "rpio": "^2.4.2"
+    "rpio": "^2.4.2",
+    "socket.io-client": "^4.5.4",
+    "ws": "^8.12.0"
   }
 }

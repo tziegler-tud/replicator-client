@@ -3,10 +3,7 @@ const PvRecorder = require("@picovoice/pvrecorder-node");
 
 const picoVoiceConfig = require("../config/picovoice-pi.json");
 const VoiceCommandService = require("./voiceCommandService");
-const LedInterface = require("./LedInterface.js");
-
-const LightsService = require("./LightsService");
-const lightsService = LightsService.getInstance();
+const LedInterface = require("../interfaces/LedInterface.js");
 
 /**
  * @typedef {Object} LightGroupObject
@@ -52,7 +49,6 @@ class Location {
             .catch(err => {
                 console.warn(err);
             })
-
     }
 
 
@@ -119,37 +115,7 @@ class Location {
         this.recorder.stop();
     };
 
-    /**
-     * adds a hue light group
-     * @param groupName {string} name of the group assigned by the hue bridge.
-     */
-    addLightGroup(groupName) {
-        lightsService.getLightGroupIdByName(groupName)
-            .then(id => {
-                let o = {id: id, name: groupName};
-                this.lightGroups.push(o);
-                return o;
-            })
-            .catch(e => {
-                return false
-            });
-    }
 
-    addLight(lightName, aliases) {
-        lightsService.getLightIdByName(lightName)
-            .then(id => {
-                let o = {id: id, name: lightName, aliases: aliases};
-                this.lights.push(o);
-                return o;
-            })
-            .catch(e => {
-                return false
-            });
-    }
-
-    getLightsByAlias(alias){
-        return this.lights.filter(light => light.aliases.includes(alias));
-    }
 }
 
 module.exports = Location;
