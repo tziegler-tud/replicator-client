@@ -4,6 +4,7 @@ const DbServer = db.Server;
 import net from "net";
 import { io } from "socket.io-client";
 import tcpResponse from "../helpers/tcpResponseGenerator.js";
+import ApiResponse from "../helpers/apiResponse.js";
 import Service from "./Service.js";
 
 import SettingsService from "./SettingsService.js";
@@ -79,7 +80,8 @@ class CommunicationService extends Service {
                             })
                             .catch(err => {
                                 //connection error.
-                                console.log("Failed to connect to last known server. State is now: " + self.enums.state.READYTOCONNECT);
+                                console.log("Failed to connect to last known server. Reason: " + err)
+                                console.log("State is now: " + self.enums.state.READYTOCONNECT);
                                 self.state = self.enums.state.READYTOCONNECT;
                             })
 
@@ -122,28 +124,76 @@ class CommunicationService extends Service {
                 if (knownHost){
                     //update server endpoints
                     knownHost.endpoints = endpoints;
-                    self.currentServer = new Server(knownHost);
+                    self.currentServer = knownHost;
                     self.currentServer.tcpConnect()
                         .then(result => {
-                            resolve(self.currentServer)
+                            self.state = self.enums.state.CONNECTED;
+                            const response = {
+                                server: self.currentServer,
+                                state: self.state,
+                                result: new ApiResponse(ApiResponse.apiResponse.REGISTRATION.ALREADYREGISTERED)
+                            }
+                            resolve(response)
                         })
                         .catch(tcpError => {
                             //failed to connect. Let's look at the error
                             const errData = tcpError.data;
+                            let response = {
+                                server: self.currentServer,
+                                state: self.state,
+                                result: new ApiResponse(ApiResponse.apiResponse.REGISTRATION.FAILED),
+                                error: tcpError,
+                            }
                             switch(errData.code){
                                 case 1:
                                     //connection error
+                                    response = {
+                                        server: self.currentServer,
+                                        state: self.state,
+                                        result: new ApiResponse(ApiResponse.apiResponse.CONNECTION.FAIL),
+                                        error: tcpError,
+                                    }
+
                                     break;
                                 case 23:
+                                    response = {
+                                        server: self.currentServer,
+                                        state: self.state,
+                                        result: new ApiResponse(ApiResponse.apiResponse.REGISTRATION.EXPIRED)
+                                    }
                                     //registration not present on server. Let's update our registration
                                     self.currentServer.tcpRegister()
                                         .then(result=> {
                                             //registration updated.
-                                            resolve(self.currentServer);
+                                            //update server data
+                                            self.currentServer.serverId = result.serverId;
+                                            self.currentServer.clientId = result.clientId;
+                                            self.currentServer.saveToDb()
+                                                .then(result => {
+                                                    self.currentServer.tcpConnect()
+                                                        .then(result => {
+                                                            self.state = self.enums.state.CONNECTED;
+                                                            const response = {
+                                                                server: self.currentServer,
+                                                                state: self.state,
+                                                                result: new ApiResponse(ApiResponse.apiResponse.REGISTRATION.RENEWED)
+                                                            }
+                                                            resolve(response)
+                                                        })
+                                                        .catch(tcpError => {
+                                                            response.error = tcpError;
+                                                            reject(response);
+                                                        })
+                                                })
+                                                .catch(err => {
+                                                    response.error = err;
+                                                    reject(response);
+                                                })
                                         })
                                         .catch(err => {
+                                            response.error = err;
                                             //failed
-                                            reject(err);
+                                            reject(response);
                                         })
                                     break;
                                 default:
@@ -162,7 +212,13 @@ class CommunicationService extends Service {
                                 .then(result => {
                                     self.currentServer.tcpConnect()
                                         .then(result => {
-                                            resolve(self.currentServer)
+                                            self.state = self.enums.state.CONNECTED;
+                                            const response = {
+                                                server: self.currentServer,
+                                                state: self.state,
+                                                result: new ApiResponse(ApiResponse.apiResponse.REGISTRATION.SUCCESSFULL)
+                                            }
+                                            resolve(response)
                                         })
                                         .catch(err => {
                                             reject(err);
@@ -178,8 +234,22 @@ class CommunicationService extends Service {
                 }
             }
             else {
-                //respond to server that we dont want to connect
-                reject("Connection refused.")
+                //check if we are connected to this server
+                if(self.currentServer.serverId === serverId){
+                    //already connected.
+                    const response = {
+                        server: self.currentServer,
+                        state: self.state,
+                        result: apiResponse.REGISTRATION.ALREADYREGISTERED,
+                    }
+                    resolve(response);
+                }
+                else {
+                    //respond to server that we dont want to connect
+                    reject("Connection refused.")
+                }
+
+
             }
         })
     }
@@ -227,6 +297,12 @@ class CommunicationService extends Service {
                                         .then(result => {
                                             //connection successful
                                             self.state = self.enums.state.CONNECTED;
+                                            const response = {
+                                                server: self.currentServer,
+                                                state: self.state,
+                                                result: result
+                                            }
+                                            resolve(response)
                                             resolve(result);
                                         })
                                         .catch(err => {
@@ -266,12 +342,13 @@ class CommunicationService extends Service {
             DISCONNECTED: "disconnected",
             READYTOCONNECT: "readyToConnect",
             DISABLED:   "disabled",
-        }
+        },
     }
 }
 
 class Server {
     constructor(dbServerObject){
+        this.dbId = dbServerObject._id;
         this.identifier = dbServerObject.identifier;
         this.serverId = dbServerObject.serverId;
         /**
@@ -289,18 +366,58 @@ class Server {
         this.connected = false;
     }
 
+    toJSON(){
+        return {
+            identifier: this.identifier,
+            serverId: this.serverId,
+            endpoints: this.endpoints,
+            url: this.url,
+            ownUrl: this.ownUrl,
+            clientId: this.clientId,
+            lastConnection: this.lastConnection,
+            createdDate: this.createdDate,
+            connected: this.connected,
+        }
+    }
+
     saveToDb(){
         let self = this;
-        let dbServer = new DbServer(this);
-        dbServer.localId = dbServer._id;
+        //check if already in db
         return new Promise((resolve, reject)=> {
-            dbServer.save()
-                .then(dbServer => {
-                    resolve(self);
-                })
-                .catch(err => {
-                    reject(err)
-                })
+            if(self.dbId){
+                //update db entry
+                DbServer.findById(self.dbId)
+                    .then(dbServer => {
+                        if(dbServer) {
+                            const updatedObject = self;
+                            updatedObject.dbId = undefined;
+                            dbServer = Object.assign(dbServer,updatedObject);
+                            save(dbServer, resolve, reject)
+                        }
+                        else {
+                            //something went wrong. Lets create a new entry
+                            let dbServer = new DbServer(this);
+                            dbServer.localId = dbServer._id;
+                            save(dbServer, resolve, reject)
+
+                        }
+                    })
+            }
+            else {
+                let dbServer = new DbServer(this);
+                dbServer.localId = dbServer._id;
+                save(dbServer, resolve, reject)
+            }
+
+            function save(dbServer, resolve, reject){
+                dbServer.save()
+                    .then(dbServer => {
+                        resolve(self);
+                    })
+                    .catch(err => {
+                        reject(err)
+                    })
+            }
         });
     }
 

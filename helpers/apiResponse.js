@@ -1,9 +1,10 @@
-class tcpResponseGenerator {
-    constructor(){
-        return this;
+export default class ApiResponse {
+    constructor(response){
+        this.status = response.status;
+        this.result = response;
     }
 
-    tcpStatus = {
+    static apiStatus = {
         OK: 200,
         UNAUTHORIZED: 401,
         FORBIDDEN: 403,
@@ -35,32 +36,32 @@ class tcpResponseGenerator {
      *  26: registration not allowed
      */
 
-    tpcResponse = {
+    static apiResponse = {
         CONNECTION: {
             SUCCESSFULL: {
-                status: this.tcpStatus.OK,
+                status: this.apiStatus.OK,
                 code: 0,
                 message: "Connection successful"
             },
             FAIL: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 1,
                 message: "Connection failed"
             },
         },
         ARGUMENTS: {
             MISSING: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 11,
                 message: "Arguments missing",
             },
             TYPEMISSMATCH: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 12,
                 message: "Arguments type missmatch",
             },
             INVALIDCLIENTID: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 13,
                 message: "ClientId does not match connection authorization",
             }
@@ -68,42 +69,50 @@ class tcpResponseGenerator {
         },
         REGISTRATION: {
             SUCCESSFULL: {
-                status: this.tcpStatus.OK,
+                status: this.apiStatus.OK,
                 code: 0,
                 message: "Registration Successfull"
             },
             NOTREGISTERED: {
-                status: this.tcpStatus.UNAUTHORIZED,
+                status: this.apiStatus.UNAUTHORIZED,
                 code: 21,
                 message: "Not registered",
             },
             INVALID: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 22,
                 message: "Registeration invalid",
             },
             EXPIRED: {
-                status: this.tcpStatus.UNAUTHORIZED,
+                status: this.apiStatus.UNAUTHORIZED,
                 code: 23,
                 message: "Registeration expired",
             },
             INCOMPLETE: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 24,
                 message: "Registeration incomplete",
             },
             ALREADYREGISTERED: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.OK,
                 code: 25,
                 message: "Client already registered.",
             },
             NOTALLOWED: {
-                status: this.tcpStatus.ERROR,
+                status: this.apiStatus.ERROR,
                 code: 26,
                 message: "Registration not allowed.",
+            },
+            RENEWED: {
+                status: this.apiStatus.OK,
+                code: 27,
+                message: "Registration renewed",
+            },
+            FAILED: {
+                status: this.apiStatus.ERROR,
+                code: 28,
+                message: "Registration failed.",
             }
         }
     }
 }
-
-export default new tcpResponseGenerator();

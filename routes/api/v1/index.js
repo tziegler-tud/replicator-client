@@ -31,7 +31,12 @@ function connectToServer(req, res, next) {
     let data = req.body;
     CommunicationService.handleTCPConnectionRequest(req.body)
       .then(result => {
-        res.json(result);
+          //return our client information
+          const response = {
+              clientId: result.clientId,
+              connected: result.connected,
+          }
+          res.json(response);
       })
       .catch(err => {
         next(err);
