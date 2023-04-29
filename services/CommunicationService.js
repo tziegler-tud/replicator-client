@@ -8,7 +8,7 @@ import ApiResponse from "../helpers/apiResponse.js";
 import Service from "./Service.js";
 
 import SettingsService from "./SettingsService.js";
-const appSettings = SettingsService.getInstance();
+import {networkInterfaces} from "os";
 
 /**
  * @typedef CommandObject
@@ -41,6 +41,7 @@ class CommunicationService extends Service {
         this.knownServers = [];
         this.currentServer = undefined;
         this.isConnected = false;
+        this.url = undefined;
         this.status = this.enums.state.DISABLED;
 
     }
@@ -51,49 +52,59 @@ class CommunicationService extends Service {
             console.log("Initializing CommunicationService...");
             let errMsg = "Failed to initialize CommunicationService:";
 
-            //check known servers in db
-            DbServer.find()
-                .then(/** @param servers {DbServerObject[]} */ function(servers) {
+            //wait for settings service to init
+            SettingsService.init.then(() => {
+                //find available network interfaces
+                self.networkAddresses = self.findNetworkInterfaces();
+                //if an external address is available, use it. Otherwise, use internal
+                if(self.networkAddresses.external.length > 0) {
+                    self.selectNetworkInterface(self.networkAddresses.external[0]);
+                    console.log("Using network interface: " + self.url)
+                }
+                else self.selectNetworkInterface(self.networkAddresses.internal[0]);
 
-                    if(!servers || servers.length === 0){
-                        //no recent servers found
-                        self.state = self.enums.state.READYTOCONNECT;
-                    }
-                    else {
-                        //server entries found.
-                        //sort by last Connection and try the most recent one
-                        servers.sort(function(a,b){
-                            return b.lastConnection - a.lastConnection;
-                        })
-                        //create rt objects
-                        let rtServers = [];
-                        servers.forEach(dbServer => {
-                            rtServers.push(new Server(dbServer));
-                        })
-                        self.knownServers = rtServers;
-                        //try to connect to most recent one
-                        self.currentServer = new Server(servers[0]);
-                        self.currentServer.tcpConnect()
-                            .then(result => {
-                                //connection successful
-                                self.state = self.enums.state.CONNECTED;
+                //check known servers in db
+                DbServer.find()
+                    .then(/** @param servers {DbServerObject[]} */ function(servers) {
+
+                        if(!servers || servers.length === 0){
+                            //no recent servers found
+                            self.state = self.enums.state.READYTOCONNECT;
+                        }
+                        else {
+                            //server entries found.
+                            //sort by last Connection and try the most recent one
+                            servers.sort(function(a,b){
+                                return b.lastConnection - a.lastConnection;
                             })
-                            .catch(err => {
-                                //connection error.
-                                console.log("Failed to connect to last known server. Reason: " + err)
-                                console.log("State is now: " + self.enums.state.READYTOCONNECT);
-                                self.state = self.enums.state.READYTOCONNECT;
+                            //create rt objects
+                            let rtServers = [];
+                            servers.forEach(dbServer => {
+                                rtServers.push(new Server(dbServer, self.url));
                             })
+                            self.knownServers = rtServers;
+                            //try to connect to most recent one
+                            self.currentServer = new Server(servers[0], self.url);
+                            self.currentServer.tcpConnect()
+                                .then(result => {
+                                    //connection successful
+                                    self.state = self.enums.state.CONNECTED;
+                                })
+                                .catch(err => {
+                                    //connection error.
+                                    console.log("Failed to connect to last known server. Reason: " + err)
+                                    console.log("State is now: " + self.enums.state.READYTOCONNECT);
+                                    self.state = self.enums.state.READYTOCONNECT;
+                                })
 
-                    }
+                        }
 
 
-                })
-                .catch(err => {
-                    reject(err)
-                })
-
-
+                    })
+                    .catch(err => {
+                        reject(err)
+                    })
+            })
         })
     }
 
@@ -203,7 +214,7 @@ class CommunicationService extends Service {
                 }
                 else {
                     //register
-                    self.currentServer = new Server(serverInformation);
+                    self.currentServer = new Server(serverInformation, self.url);
                     self.currentServer.tcpRegister()
                         .then(result => {
                             self.currentServer.serverId = result.serverId;
@@ -273,7 +284,7 @@ class CommunicationService extends Service {
                         knownHost.url = url;
                     }
                     //connect
-                    self.currentServer = new Server(knownHost);
+                    self.currentServer = new Server(knownHost, self.url);
                     self.currentServer.connect()
                         .then(result => {
                             //update db object
@@ -287,7 +298,7 @@ class CommunicationService extends Service {
                 else {
                     //register
                     serverInformation.url = url;
-                    self.currentServer = new Server(serverInformation);
+                    self.currentServer = new Server(serverInformation, self.url);
                     self.currentServer.register()
                         .then(result => {
                             self.currentServer.saveToDb()
@@ -336,6 +347,35 @@ class CommunicationService extends Service {
             .catch()
     }
 
+    findNetworkInterfaces(){
+        const nets = networkInterfaces();
+        let results = {
+            internal: [],
+            external: []
+        }
+        for (const name of Object.keys(nets)) {
+            for (const net of nets[name]) {
+                // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+                // 'IPv4' is in Node <= 17, from 18 it's a number 4 or 6
+                const familyV4Value = typeof net.family === 'string' ? 'IPv4' : 4
+                if (net.family === familyV4Value) {
+                    if(net.internal) results.internal.push({name: name, address: net.address, internal: true});
+                    else results.external.push({name: name, address: net.address, external: true});
+                }
+            }
+        }
+        //choose first entry
+        return results;
+    }
+
+    selectNetworkInterface(entry, protocol="http://"){
+        if(!entry.address){
+            if(typeof entry === "string") entry = {address: entry}
+        }
+        this.url = protocol + entry.address;
+        return this.url;
+    }
+
     enums = {
         state: {
             CONNECTED: "connected",
@@ -347,7 +387,7 @@ class CommunicationService extends Service {
 }
 
 class Server {
-    constructor(dbServerObject){
+    constructor(dbServerObject, clientUrl=""){
         this.dbId = dbServerObject._id;
         this.identifier = dbServerObject.identifier;
         this.serverId = dbServerObject.serverId;
@@ -361,6 +401,7 @@ class Server {
         this.clientId = dbServerObject.clientId;
         this.lastConnection = dbServerObject.lastConnection;
         this.createdDate = dbServerObject.createdDate;
+        this.clientUrl = clientUrl;
 
         this.socket = undefined;
         this.connected = false;
@@ -490,7 +531,7 @@ class Server {
             const options = {
                 auth: {
                     clientId: self.clientId
-                }
+                },
             }
             const socket = io("http://" + self.endpoints.tcp.address + ":" + self.endpoints.tcp.port, options);
             socket.on("connect", () => {
@@ -558,17 +599,24 @@ class Server {
             }
             //create tcp socket at the register endpoint
             const options = {
-
+                extraHeaders: {
+                    originUrl: self.clientUrl,
+                }
             }
             const registrationEndpoint = "http://" + self.endpoints.tcp.address + ":" + self.endpoints.tcp.port + "/register";
             const socket = io(registrationEndpoint, options);
             socket.on("connect", () => {
                 console.log(socket.id); // x8WIv7-mJelg7on_ALbx
                 //try to register
+                const settings = SettingsService.getSettings();
+                /** @type {any} */
                 let authData = {
-                    identifier: appSettings.settings.identifier,
+                    identifier: settings.identifier,
+                    url: self.clientUrl,
+                    version: settings.version,
                 };
                 socket.emit("registerClient", authData);
+
             });
             socket.on("disconnect", () => {
 
@@ -617,8 +665,9 @@ class Server {
             //check if a client id has been assigned
             if(self.clientId) reject(errMsg + "A client id is already set. Maybe you want to connect?");
             //authenticate at the server. We send our client information to the authenticate endpoint
+            /** @type {any} */
             let authData = {
-                identifier: appSettings.settings.identifier,
+                identifier: SettingsService.getSettings().identifier,
             };
             self.send({path: "/api/v1/clients/register", method: "POST", data: authData})
                 .then(response => {
@@ -664,13 +713,14 @@ class Server {
             //check if a client id has been assigned
             if(!self.clientId) reject(errMsg + "No client Id set for current server.");
             //authenticate at the server. We send our client information to the authenticate endpoint
+            /** @type {any} */
             let authData = {
-                identifier: appSettings.identifier,
+                identifier: SettingsService.getSettings().identifier,
                 clientId: self.clientId,
             };
             self.send({path: "/api/v1/clients/connect", method: "POST", data: authData})
-                .then(result=> {
-                    if(result.ok){
+                .then(result => {
+                    if (result.ok) {
                         self.lastConnection = Date.now();
                         resolve(result);
                     }
@@ -679,6 +729,7 @@ class Server {
                 .catch(err => {
                     reject(err);
                 })
+
         })
     }
 

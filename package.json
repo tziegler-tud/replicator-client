@@ -1,5 +1,5 @@
 {
-  "name": "replicator",
+  "name": "replicator-client",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -18,7 +18,7 @@
     "express": "~4.16.1",
     "http-errors": "~1.6.3",
     "js-yaml": "^4.1.0",
-    "mongoose": "^6.8.3",
+    "mongoose": "^7.0.1",
     "morgan": "~1.9.1",
     "node-fetch": "^3.3.0",
     "pug": "2.0.0-beta11",

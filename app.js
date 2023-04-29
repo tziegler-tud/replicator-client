@@ -64,7 +64,7 @@ app.use(function(err, req, res, next) {
 });
 
 //load settings from db
-let settingsService = SettingsService.createInstance();
+let settingsService = SettingsService.start({});
 
 //load server communication module
 let server = CommunicationService.start();

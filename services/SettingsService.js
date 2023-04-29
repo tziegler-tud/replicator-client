@@ -1,81 +1,68 @@
 import fetch from 'node-fetch';
 import db from '../schemes/mongo.js';
+import fs from "fs";
+import * as fsPromises from 'node:fs/promises';
 const Settings = db.Settings;
+
+import systemSettings from "../config/systemSettings.json" assert { type: 'json' };
+import path from "path";
+import {fileURLToPath} from "url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @class
  * @constructor
  * Singleton
  */
-export default class SettingsService {
+class SettingsService {
     constructor(init = false) {
         let self = this;
-
-        this.settings = {};
         this.initStarted = false;
-
-        this.defaultSettings = {
-
-        }
+        this.status = this.statusEnum.NOTSTARTED;
 
         this.init = new Promise(function (resolve, reject) {
             self.resolveInit = resolve;
             self.rejectInit = reject;
         })
-        if (init) {
-            this.initFunc();
+
+        this.debugLabel = "SettingsService: ";
+        this.settings = {};
+        this.defaultSettings = {
+            system: {
+                debugLevel: 0
+            }
         }
         return this;
     }
 
-    static _instance;
-
-    static getInstance() {
-        if (this._instance) {
-            return this._instance;
-        } else {
-            this._instance = new SettingsService();
-            return this._instance;
-        }
-    }
-
-    static createInstance(init = true) {
-        if (this._instance) {
-            if (!this._instance.initStarted && init) this._instance.startInit();
-            return this._instance;
-        }
-
-        this._instance = new SettingsService(init);
-        return this._instance;
-    }
-
-    static setInstance(instance) {
-        this._instance = instance;
-        return this._instance;
-    }
-
-    startInit() {
+    start(args){
         let self = this;
         this.initStarted = true;
-        this.initFunc()
+        this.initFunc(args)
             .then(result => {
+                self.status = self.statusEnum.RUNNING;
                 self.resolveInit();
             })
             .catch(err => {
+                self.status = self.statusEnum.FAILED;
                 self.rejectInit();
             });
+        return this.init;
     }
 
-    initFunc() {
+    initFunc(args) {
         let self = this;
         return new Promise(function (resolve, reject) {
             console.log("Loading settings...");
             let errMsg = "Failed to initialize SettingsService:";
 
-            //try to load from db
+            //read user settings
+            self.settings = systemSettings;
+
+            //try to load file from systemStore
             self.load()
                 .then(result=> {
-                    self.settings = result;
+                    self.settings = Object.assign(result, systemSettings)
                     resolve(result)
                 })
                 .catch(err=> {
@@ -95,37 +82,75 @@ export default class SettingsService {
         let defaults = this.defaultSettings;
         params = Object.assign(defaults, params);
         params.identifier = params.identifier ? params.identifier : "Replicator-Client-" + Date.now();
-        let settings = new Settings(params)
-        this.settings = settings;
-        return settings.save()
+        this.settings = params;
+        return this.save();
     }
 
     save(){
-        return this.settings.save();
+        let self  = this;
+        return new Promise(function(resolve, reject){
+            const content = JSON.stringify(self.settings);
+            //check if systemStore dir exists
+            const storePath = path.join(__dirname, '..', "/systemStore");
+            const filePath = path.join(storePath, "systemSettings.json");
+            fs.access(storePath, error => {
+                if (error) {
+                    fs.mkdirSync(storePath);
+                    write();
+                }
+                else {
+                    write();
+                }
+
+                function write() {
+                    fsPromises.writeFile(filePath, content, 'utf8')
+                        .then(result => {
+                            resolve()
+                        })
+                        .catch(err => {
+                            reject(err);
+                        })
+                }
+
+            });
+        })
+
     }
 
     load(){
         let self = this;
         return new Promise(function (resolve, reject) {
-            //check known servers in db
-            Settings.findOne()
-                .then(function(settings) {
-                    if(!settings){
-                        //no file found
-                        reject("No settings document found in database");
-                    }
-                    self.settings = settings;
-                    resolve(settings);
-                })
-                .catch(err => {
-                    reject(err)
-                })
+            const storePath = path.join(__dirname, '..', "/systemStore");
+            const filePath = path.join(storePath, "systemSettings.json");
+            fs.readFile(filePath, 'utf8', function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    const obj = JSON.parse(data);
+                    resolve(obj);
+                }
+            });
         })
+    }
+
+    getSettings() {
+        return this.settings;
     }
 
     set({key, value}={}){
         if(!key) return false;
         this.settings[key] = value;
-        return this.save();
+        this.save();
+        return this.settings;
+    }
+
+    statusEnum = {
+        NOTSTARTED: 0,
+        RUNNING: 1,
+        STOPPED: 2,
+        FAILED: 3,
     }
 }
+
+export default new SettingsService();

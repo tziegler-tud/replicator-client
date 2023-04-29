@@ -10,7 +10,14 @@ var opt = {
     },
 };
 
-mongoose.connect(config.connectionString,opt);  // use this for remote database
+console.log("Connecting to MongoDB instance at " + config.connectionString + "...");
+mongoose.connect(config.connectionString,opt)
+    .then(result => {
+        console.log("Database connection successfull.")
+    })
+    .catch(err => {
+        console.error("Failed to connect to Database: " + err);
+    })
 mongoose.Promise = global.Promise;
 
 import Server from "./serverScheme.js"

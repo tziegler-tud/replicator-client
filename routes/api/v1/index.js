@@ -33,8 +33,8 @@ function connectToServer(req, res, next) {
       .then(result => {
           //return our client information
           const response = {
-              clientId: result.clientId,
-              connected: result.connected,
+              clientId: result.server.clientId,
+              connected: result.state,
           }
           res.json(response);
       })
