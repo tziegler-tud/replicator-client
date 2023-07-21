@@ -542,7 +542,7 @@ class Server {
                 resolve(socket);
             });
             socket.on("message", function(data){
-                console.log(data);
+                console.log("Received message: " + data);
             })
             socket.on("disconnect", () => {
                 console.log(socket.id); // undefined
