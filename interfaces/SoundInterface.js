@@ -1,6 +1,6 @@
 import Interface from "./Interface.js";
-import Speaker from 'speaker';
-import audioApi from 'web-audio-api';
+// import Speaker from 'speaker';
+// import audioApi from 'web-audio-api';
 import rpio from'rpio';
 import fs from "fs";
 import path from "path";
@@ -29,14 +29,14 @@ export default class SoundInterface extends Interface {
          */
         this.init = this.initFunc();
 
-        this.speaker = new Speaker({
-            channels: 2,          // 2 channels
-            bitDepth: 16,         // 16-bit samples
-            sampleRate: 44100     // 44,100 Hz sample rate
-        });
-        this.context      = new audioApi.AudioContext();
-        this.audio = new WritableStream();
-        this.context.outStream = this.audio;
+        // this.speaker = new Speaker({
+        //     channels: 2,          // 2 channels
+        //     bitDepth: 16,         // 16-bit samples
+        //     sampleRate: 44100     // 44,100 Hz sample rate
+        // });
+        // this.context      = new audioApi.AudioContext();
+        // this.audio = new WritableStream();
+        // this.context.outStream = this.audio;
 
         const __dirname = path.dirname(fileURLToPath(import.meta.url));
         const soundDirPath = path.join(__dirname, '..', 'systemStore', 'sounds');
@@ -120,44 +120,44 @@ export default class SoundInterface extends Interface {
     }
 
     playSound(filename){
-        let self = this;
-        const __dirname = path.dirname(fileURLToPath(import.meta.url));
-        let filepath = path.join(__dirname, '..', 'systemStore', 'sounds', filename);
-
-        return new Promise(function(resolve, reject){
-            fs.readFile(filepath, function(err, data){
-                if(err) {
-                    console.error("Failed to read file: " + filepath);
-                    reject();
-                }
-                else {
-                    self.context.decodeAudioData(data, function(audioBuffer) {
-
-                        self.context.outStream = new Speaker({
-                            channels:   self.context.format.numberOfChannels,
-                            bitDepth:   self.context.format.bitDepth,
-                            sampleRate: self.context.sampleRate
-                        });
-                        // self.context.outStream = process.stdout;
-                        self.play(audioBuffer);
-                        resolve();
-                    });
-                }
-            });
-
-
-        })
+        // let self = this;
+        // const __dirname = path.dirname(fileURLToPath(import.meta.url));
+        // let filepath = path.join(__dirname, '..', 'systemStore', 'sounds', filename);
+        //
+        // return new Promise(function(resolve, reject){
+        //     fs.readFile(filepath, function(err, data){
+        //         if(err) {
+        //             console.error("Failed to read file: " + filepath);
+        //             reject();
+        //         }
+        //         else {
+        //             self.context.decodeAudioData(data, function(audioBuffer) {
+        //
+        //                 self.context.outStream = new Speaker({
+        //                     channels:   self.context.format.numberOfChannels,
+        //                     bitDepth:   self.context.format.bitDepth,
+        //                     sampleRate: self.context.sampleRate
+        //                 });
+        //                 // self.context.outStream = process.stdout;
+        //                 self.play(audioBuffer);
+        //                 resolve();
+        //             });
+        //         }
+        //     });
+        //
+        //
+        // })
 
     }
 
-    play(audioBuffer) {
-        if (!audioBuffer) { return; }
-        var bufferSource = this.context.createBufferSource();
-        bufferSource.connect(this.context.destination);
-        bufferSource.buffer = audioBuffer;
-        bufferSource.loop   = false;
-        bufferSource.start(0);
-    }
+    // play(audioBuffer) {
+    //     if (!audioBuffer) { return; }
+    //     var bufferSource = this.context.createBufferSource();
+    //     bufferSource.connect(this.context.destination);
+    //     bufferSource.buffer = audioBuffer;
+    //     bufferSource.loop   = false;
+    //     bufferSource.start(0);
+    // }
 }
 
 
