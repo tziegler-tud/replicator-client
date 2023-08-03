@@ -98,8 +98,7 @@ class CommunicationService extends Service {
                                 })
 
                         }
-
-
+                        resolve();
                     })
                     .catch(err => {
                         reject(err)

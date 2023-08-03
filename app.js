@@ -67,27 +67,32 @@ app.use(function(err, req, res, next) {
 let settingsService = SettingsService.start({});
 
 //load server communication module
-let server = CommunicationService.start();
+let communicationService= CommunicationService.start();
 
 
 //init voice command service
-let voiceCommandService = VoiceCommandService.createInstance();
+let voiceCommandService = VoiceCommandService.start();
 
 //init Interface Service
-let interfaceService = InterfaceService.createInstance();
-// interfaceService.addLedInterface(12);
+let interfaceService = InterfaceService.start();
+// interfaceService.addLedInterface({ledAmount: 3});
 
 
-/*
-picovoice setup
- */
-//
-// const locationManager = new LocationManager();
 
 const devices = PvRecorder.getAudioDevices();
 
 //start voice recognition service
-const voiceService = new VoiceRecognitionService({})
-voiceService.start();
+const voiceRecognitionService = VoiceRecognitionService.start();
+
+//wait for all services to start
+Promise.all([settingsService, communicationService, voiceCommandService, interfaceService, voiceRecognitionService])
+    .then(results => {
+      InterfaceService.handleEvent(InterfaceService.events.SETUPCOMPLETE);
+    })
+    .catch(err => {
+      console.error("System startup failed: Some services failed to initialize.");
+      console.error(err);
+    })
+
 
 export default app;

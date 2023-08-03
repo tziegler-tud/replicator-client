@@ -13,17 +13,23 @@
     "@picovoice/picovoice-node": "^2.2.1",
     "@picovoice/porcupine-node": "^2.2.1",
     "@picovoice/pvrecorder-node": "1.1.2",
+    "audic": "^3.0.2",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "express": "~4.16.1",
+    "gibber.audio.lib": "^2.1.4",
     "http-errors": "~1.6.3",
     "js-yaml": "^4.1.0",
     "mongoose": "^7.0.1",
     "morgan": "~1.9.1",
     "node-fetch": "^3.3.0",
+    "node-lame": "^1.3.2",
     "pug": "2.0.0-beta11",
     "rpio": "^2.4.2",
     "socket.io-client": "^4.5.4",
+    "speaker": "^0.5.4",
+    "web-audio-api": "^0.2.2",
+    "web-audio-engine": "^0.13.4",
     "ws": "^8.12.0"
   }
 }
