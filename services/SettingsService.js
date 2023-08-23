@@ -1,8 +1,5 @@
-import fetch from 'node-fetch';
-import db from '../schemes/mongo.js';
 import fs from "fs";
 import * as fsPromises from 'node:fs/promises';
-const Settings = db.Settings;
 
 import systemSettings from "../config/systemSettings.json" assert { type: 'json' };
 import path from "path";

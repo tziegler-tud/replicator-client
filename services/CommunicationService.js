@@ -1,7 +1,4 @@
 import fetch from 'node-fetch';
-import db from '../schemes/mongo.js';
-const DbServer = db.Server;
-import net from "net";
 import { io } from "socket.io-client";
 import tcpResponse from "../helpers/tcpResponseGenerator.js";
 import ApiResponse from "../helpers/apiResponse.js";
@@ -9,6 +6,11 @@ import Service from "./Service.js";
 
 import SettingsService from "./SettingsService.js";
 import {networkInterfaces} from "os";
+import path from "path";
+import fs from "fs";
+import fsPromises from "node:fs/promises";
+import {fileURLToPath} from "url";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * @typedef CommandObject
@@ -63,10 +65,11 @@ class CommunicationService extends Service {
                 }
                 else self.selectNetworkInterface(self.networkAddresses.internal[0]);
 
-                //check known servers in db
-                DbServer.find()
-                    .then(/** @param servers {DbServerObject[]} */ function(servers) {
 
+                //load last known server from localStorage
+                Server.loadFromStorage()
+                    .then(dbServerObject => {
+                        const servers = [dbServerObject];
                         if(!servers || servers.length === 0){
                             //no recent servers found
                             self.state = self.enums.state.READYTOCONNECT;
@@ -96,14 +99,54 @@ class CommunicationService extends Service {
                                     console.log("State is now: " + self.enums.state.READYTOCONNECT);
                                     self.state = self.enums.state.READYTOCONNECT;
                                 })
-
                         }
-
-
                     })
                     .catch(err => {
-                        reject(err)
+                        console.log("Failed to connect to last known server. Reason: " + err)
+                        console.log("State is now: " + self.enums.state.READYTOCONNECT);
+                        self.state = self.enums.state.READYTOCONNECT;
                     })
+                //check known servers in db
+                // DbServer.find()
+                //     .then(/** @param servers {DbServerObject[]} */ function(servers) {
+                //
+                //         if(!servers || servers.length === 0){
+                //             //no recent servers found
+                //             self.state = self.enums.state.READYTOCONNECT;
+                //         }
+                //         else {
+                //             //server entries found.
+                //             //sort by last Connection and try the most recent one
+                //             servers.sort(function(a,b){
+                //                 return b.lastConnection - a.lastConnection;
+                //             })
+                //             //create rt objects
+                //             let rtServers = [];
+                //             servers.forEach(dbServer => {
+                //                 rtServers.push(new Server(dbServer, self.url));
+                //             })
+                //             self.knownServers = rtServers;
+                //             //try to connect to most recent one
+                //             self.currentServer = new Server(servers[0], self.url);
+                //             self.currentServer.tcpConnect()
+                //                 .then(result => {
+                //                     //connection successful
+                //                     self.state = self.enums.state.CONNECTED;
+                //                 })
+                //                 .catch(err => {
+                //                     //connection error.
+                //                     console.log("Failed to connect to last known server. Reason: " + err)
+                //                     console.log("State is now: " + self.enums.state.READYTOCONNECT);
+                //                     self.state = self.enums.state.READYTOCONNECT;
+                //                 })
+                //
+                //         }
+                //
+                //
+                //     })
+                //     .catch(err => {
+                //         reject(err)
+                //     })
             })
         })
     }
@@ -179,7 +222,7 @@ class CommunicationService extends Service {
                                             //update server data
                                             self.currentServer.serverId = result.serverId;
                                             self.currentServer.clientId = result.clientId;
-                                            self.currentServer.saveToDb()
+                                            self.currentServer.save()
                                                 .then(result => {
                                                     self.currentServer.tcpConnect()
                                                         .then(result => {
@@ -219,7 +262,7 @@ class CommunicationService extends Service {
                         .then(result => {
                             self.currentServer.serverId = result.serverId;
                             self.currentServer.clientId = result.clientId;
-                            self.currentServer.saveToDb()
+                            self.currentServer.save()
                                 .then(result => {
                                     self.currentServer.tcpConnect()
                                         .then(result => {
@@ -288,7 +331,7 @@ class CommunicationService extends Service {
                     self.currentServer.connect()
                         .then(result => {
                             //update db object
-                            self.currentServer.saveToDb();
+                            self.currentServer.save();
                             resolve(result);
                         })
                         .catch(err => {
@@ -301,7 +344,7 @@ class CommunicationService extends Service {
                     self.currentServer = new Server(serverInformation, self.url);
                     self.currentServer.register()
                         .then(result => {
-                            self.currentServer.saveToDb()
+                            self.currentServer.save()
                                 .then(dbServer => {
                                     //lets connect!
                                     self.currentServer.connect()
@@ -387,8 +430,23 @@ class CommunicationService extends Service {
 }
 
 class Server {
+    static systemStoragePath = path.join(__dirname, '..', "/systemStore");
+    static systemStorageIdentifier = "server.json"
+    static loadFromStorage(){
+        return new Promise(function (resolve, reject) {
+            const filePath = path.join(Server.systemStoragePath, Server.systemStorageIdentifier);
+            fs.readFile(filePath, 'utf8', function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    const dbServerObject = JSON.parse(data);
+                    resolve(dbServerObject);
+                }
+            });
+        })
+    }
     constructor(dbServerObject, clientUrl=""){
-        this.dbId = dbServerObject._id;
         this.identifier = dbServerObject.identifier;
         this.serverId = dbServerObject.serverId;
         /**
@@ -421,46 +479,76 @@ class Server {
         }
     }
 
-    saveToDb(){
+    save(){
         let self = this;
-        //check if already in db
-        return new Promise((resolve, reject)=> {
-            if(self.dbId){
-                //update db entry
-                DbServer.findById(self.dbId)
-                    .then(dbServer => {
-                        if(dbServer) {
-                            const updatedObject = self;
-                            updatedObject.dbId = undefined;
-                            dbServer = Object.assign(dbServer,updatedObject);
-                            save(dbServer, resolve, reject)
-                        }
-                        else {
-                            //something went wrong. Lets create a new entry
-                            let dbServer = new DbServer(this);
-                            dbServer.localId = dbServer._id;
-                            save(dbServer, resolve, reject)
+        return new Promise(function(resolve, reject){
+            const serverJson = self.toJSON();
+            const content = JSON.stringify(serverJson);
+            //check if systemStore dir exists
+            const filePath = path.join(Server.systemStoragePath, Server.systemStorageIdentifier);
+            fs.access(Server.systemStoragePath, error => {
+                if (error) {
+                    fs.mkdirSync(Server.systemStoragePath);
+                    write();
+                }
+                else {
+                    write();
+                }
 
-                        }
-                    })
-            }
-            else {
-                let dbServer = new DbServer(this);
-                dbServer.localId = dbServer._id;
-                save(dbServer, resolve, reject)
-            }
+                function write() {
+                    fsPromises.writeFile(filePath, content, 'utf8')
+                        .then(result => {
+                            resolve(serverJson)
+                        })
+                        .catch(err => {
+                            reject(err);
+                        })
+                }
 
-            function save(dbServer, resolve, reject){
-                dbServer.save()
-                    .then(dbServer => {
-                        resolve(self);
-                    })
-                    .catch(err => {
-                        reject(err)
-                    })
-            }
-        });
+            });
+        })
     }
+
+    // saveToDb(){
+    //     let self = this;
+    //     //check if already in db
+    //     return new Promise((resolve, reject)=> {
+    //         if(self.dbId){
+    //             //update db entry
+    //             DbServer.findById(self.dbId)
+    //                 .then(dbServer => {
+    //                     if(dbServer) {
+    //                         const updatedObject = self;
+    //                         updatedObject.dbId = undefined;
+    //                         dbServer = Object.assign(dbServer,updatedObject);
+    //                         save(dbServer, resolve, reject)
+    //                     }
+    //                     else {
+    //                         //something went wrong. Lets create a new entry
+    //                         let dbServer = new DbServer(this);
+    //                         dbServer.localId = dbServer._id;
+    //                         save(dbServer, resolve, reject)
+    //
+    //                     }
+    //                 })
+    //         }
+    //         else {
+    //             let dbServer = new DbServer(this);
+    //             dbServer.localId = dbServer._id;
+    //             save(dbServer, resolve, reject)
+    //         }
+    //
+    //         function save(dbServer, resolve, reject){
+    //             dbServer.save()
+    //                 .then(dbServer => {
+    //                     resolve(self);
+    //                 })
+    //                 .catch(err => {
+    //                     reject(err)
+    //                 })
+    //         }
+    //     });
+    // }
 
     test(){
         let self = this;
