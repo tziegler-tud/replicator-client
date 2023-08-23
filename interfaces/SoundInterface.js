@@ -38,7 +38,7 @@ export default class SoundInterface extends Interface {
         // this.context.outStream = process.stdout
 
         const __dirname = path.dirname(fileURLToPath(import.meta.url));
-        this.soundDirPath = path.join(__dirname, '..', 'systemStore', 'sounds');
+        this.soundDirPath = path.join(__dirname, '..', 'data', 'sounds');
         //
         this.sounds = {
             SETUPCOMPLETE: "power_up1_clean.wav",

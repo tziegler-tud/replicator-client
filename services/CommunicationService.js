@@ -105,6 +105,7 @@ class CommunicationService extends Service {
                         console.log("Failed to connect to last known server. Reason: " + err)
                         console.log("State is now: " + self.enums.state.READYTOCONNECT);
                         self.state = self.enums.state.READYTOCONNECT;
+                        resolve();
                     })
             })
         })

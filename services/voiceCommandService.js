@@ -53,6 +53,7 @@ class VoiceCommandService extends Service {
             let commandVariables = command.slots; //is an object, the keys are variable names
             //send the command to the server
             CommunicationService.sendCommand(command);
+            //TODO: parse response and react accordingly
 
 
         }
