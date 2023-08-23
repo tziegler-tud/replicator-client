@@ -82,15 +82,8 @@ class VoiceRecognitionService extends Service {
                 }
             }
             if(self.recorder){
-                startRecorder()
-                    .then(result => {
-                        console.log("running");
-                        resolve()
-                    })
-                    .catch(e=> {
-                        console.error(e);
-                        reject();
-                    })
+                startRecorder();
+                resolve();
             }
             else {
                 const msg = "Failed to start recorder: Recorder not initialized.";

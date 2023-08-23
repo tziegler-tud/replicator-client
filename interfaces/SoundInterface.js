@@ -88,7 +88,7 @@ export default class SoundInterface extends Interface {
                 return self.playSoundAudic(self.audic.SETUPCOMPLETE);
                 break;
             case "ready":
-                // return self.playSoundAudic(self.audic.READY);
+                return self.playSoundAudic(self.audic.READY);
                 break;
             case "wake":
                 return self.playSoundAudic(self.audic.WAKE);
