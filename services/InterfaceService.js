@@ -56,9 +56,11 @@ class InterfaceService extends Service {
                 })
                 Promise.all(loaderPromises)
                     .then(result => {
+                        console.log("load promises resolved")
                         resolve();
                     })
                     .catch(err => {
+                        console.error("Failed to load interfaces");
                         fail(err.toString());
                     })
             }
@@ -119,7 +121,15 @@ class InterfaceService extends Service {
     }
     handleEventAll(interfaceEvent, interfaceFilter){
         this.interfaces.forEach(i => {
-            if(i.interface.active()) i.interface.handleEvent(interfaceEvent);
+            if(i.interface.active()) {
+                i.interface.handleEvent(interfaceEvent)
+                    .then(result => {
+
+                    })
+                    .catch(err => {
+                        console.error("Failed to handle Event: " + err)
+                    })
+            }
         })
     }
 
@@ -127,7 +137,15 @@ class InterfaceService extends Service {
         //apply filter
         let interfaces = this.filterInterfaces(interfaceFilter);
         interfaces.forEach(i => {
-            if(i.interface.active()) i.interface.handleEvent(interfaceEvent);
+            if(i.interface.active()) {
+                i.interface.handleEvent(interfaceEvent)
+                    // .then(result => {
+                    //
+                    // })
+                    // .catch(err => {
+                    //     console.error("Failed to handle Event: " + err)
+                    // })
+            }
         })
     }
 

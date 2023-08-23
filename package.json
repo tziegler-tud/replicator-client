@@ -24,6 +24,9 @@
     "pug": "2.0.0-beta11",
     "rpio": "^2.4.2",
     "socket.io-client": "^4.5.4",
+    "speaker": "^0.5.4",
+    "web-audio-api": "^0.2.2",
+    "web-audio-engine": "^0.13.4",
     "ws": "^8.12.0"
   }
 }

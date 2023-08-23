@@ -53,7 +53,6 @@ class CommunicationService extends Service {
         return new Promise(function (resolve, reject) {
             console.log("Initializing CommunicationService...");
             let errMsg = "Failed to initialize CommunicationService:";
-
             //wait for settings service to init
             SettingsService.init.then(() => {
                 //find available network interfaces
