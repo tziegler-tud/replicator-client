@@ -1,6 +1,7 @@
 //this class takes the voice command object from picovoice and processes it
 import InterfaceService from "./InterfaceService.js";
 import CommunicationService from "./CommunicationService.js";
+import Service from "./Service.js";
 
 /**
  * @typedef VoiceCommandObject
@@ -14,41 +15,22 @@ import CommunicationService from "./CommunicationService.js";
  * @constructor
  * Singleton
  */
-export default class VoiceCommandService {
+class VoiceCommandService extends Service {
     constructor(){
+        super();
         this.mutex = false;
-        VoiceCommandService.setInstance(this);
-        this.interface = InterfaceService.getInstance();
-        return this;
-    }
-    static _instance;
-
-    static getInstance() {
-        if (this._instance) {
-            return this._instance;
-        }
-        else {
-            console.log("Cannot get instance: Instance does not exists.");
-            return undefined;
-        }
-    }
-    static createInstance() {
-        if (this._instance) {
-            return this._instance;
-        }
-
-        this._instance = new VoiceCommandService();
-        return this._instance;
     }
 
-    static setInstance(instance) {
-        this._instance = instance;
-        return this._instance;
+    initFunc(){
+        let self = this;
+        return new Promise(function(resolve, reject){
+            resolve();
+        })
     }
 
     processKeyword(keyword) {
         //notify InterfaceSerivce
-        this.interface.handleEvent("wake");
+        InterfaceService.handleEvent("wake");
     }
 
     /**
@@ -60,19 +42,34 @@ export default class VoiceCommandService {
         //check if understood
         if(!command.isUnderstood) {
             //not understood. nothing we can do
-            this.interface.handleEvent("notunderstood");
+            InterfaceService.handleEvent("notunderstood");
             return false;
         }
         else {
-            this.interface.handleEvent("working");
+            InterfaceService.handleEvent("working");
             //get intent
             let title = command.intent;
             //these are the variables we can expect. now, lets check which ones we have:
             let commandVariables = command.slots; //is an object, the keys are variable names
             //send the command to the server
-            CommunicationService.sendCommand(command);
+            CommunicationService.sendCommand(command)
+                .then(result => {
+                    if(result.result === "success") {
+                        console.log("Command was successfully executed.");
+                        console.log("Server executed intent: " + result.response.command.intent);
+                        InterfaceService.handleEvent("success");
+                    }
+                    else {
+                        console.log("Command was rejected by server. Reason: " + result.response.result.error);
+                        InterfaceService.handleEvent("failed");
 
-
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to process command: " + err);
+                })
         }
     }
 }
+
+export default new VoiceCommandService();

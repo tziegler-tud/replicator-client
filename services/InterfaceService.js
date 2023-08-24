@@ -4,6 +4,7 @@ import SoundInterface from "../interfaces/SoundInterface.js";
 import DisplayInterface from "../interfaces/DisplayInterface.js";
 
 import interfaceConfig from "../config/interface.json" assert { type: 'json' };
+import Service from "./Service.js";
 
 /**
  * @typedef InterfaceConfig
@@ -22,8 +23,9 @@ import interfaceConfig from "../config/interface.json" assert { type: 'json' };
  * @constructor
  * Singleton
  */
-export default class InterfaceService {
+class InterfaceService extends Service {
     constructor(init=false){
+        super();
         let self = this;
 
         /**
@@ -34,57 +36,11 @@ export default class InterfaceService {
         this.ledInterface = undefined;
         this.soundInterface = undefined;
         this.displayInterface = undefined;
-        this.initStarted = false;
         /**
          *
          * @type {InterfaceConfig}
          */
         this.interfaceConfig = interfaceConfig
-        this.init = new Promise(function(resolve, reject){
-            self.resolveInit = resolve;
-            self.rejectInit = reject;
-        })
-        if(init) {
-            this.initFunc();
-        }
-        return this;
-    }
-    static _instance;
-
-    static getInstance() {
-        if (this._instance) {
-            return this._instance;
-        }
-        else {
-            this._instance = new InterfaceService();
-            return this._instance;
-        }
-    }
-    static createInstance(init = true) {
-        if (this._instance) {
-            if(!this._instance.initStarted && init) this._instance.startInit();
-            return this._instance;
-        }
-
-        this._instance = new InterfaceService(init);
-        return this._instance;
-    }
-
-    static setInstance(instance) {
-        this._instance = instance;
-        return this._instance;
-    }
-
-    startInit(){
-        let self = this;
-        this.initStarted = true;
-        this.initFunc()
-            .then(result => {
-                self.resolveInit();
-            })
-            .catch(err=> {
-                self.rejectInit();
-            });
     }
 
     initFunc(){
@@ -100,9 +56,11 @@ export default class InterfaceService {
                 })
                 Promise.all(loaderPromises)
                     .then(result => {
+                        console.log("load promises resolved")
                         resolve();
                     })
                     .catch(err => {
+                        console.error("Failed to load interfaces");
                         fail(err.toString());
                     })
             }
@@ -161,11 +119,33 @@ export default class InterfaceService {
                 })
         })
     }
+    handleEventAll(interfaceEvent, interfaceFilter){
+        this.interfaces.forEach(i => {
+            if(i.interface.active()) {
+                i.interface.handleEvent(interfaceEvent)
+                    .then(result => {
+
+                    })
+                    .catch(err => {
+                        console.error("Failed to handle Event: " + err)
+                    })
+            }
+        })
+    }
+
     handleEvent(interfaceEvent, interfaceFilter){
         //apply filter
         let interfaces = this.filterInterfaces(interfaceFilter);
         interfaces.forEach(i => {
-            if(i.interface.active()) i.interface.handleEvent(interfaceEvent);
+            if(i.interface.active()) {
+                i.interface.handleEvent(interfaceEvent)
+                    // .then(result => {
+                    //
+                    // })
+                    // .catch(err => {
+                    //     console.error("Failed to handle Event: " + err)
+                    // })
+            }
         })
     }
 
@@ -330,3 +310,5 @@ export default class InterfaceService {
         GENERIC: "GenericInterface",
     }
 }
+
+export default new InterfaceService();
