@@ -112,6 +112,7 @@ success.setAnimation(function(ledInterface, args, self){
                     if (i===ledInterface.ledAmount) {
                         clearInterval(ledInterface.interval);
                         setTimeout(function(){
+                            clear(ledInterface,500);
                             resolve();
                         },500);
                     }
