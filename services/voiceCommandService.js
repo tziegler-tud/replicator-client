@@ -52,10 +52,22 @@ class VoiceCommandService extends Service {
             //these are the variables we can expect. now, lets check which ones we have:
             let commandVariables = command.slots; //is an object, the keys are variable names
             //send the command to the server
-            CommunicationService.sendCommand(command);
-            //TODO: parse response and react accordingly
+            CommunicationService.sendCommand(command)
+                .then(result => {
+                    if(result.result === "success") {
+                        console.log("Command was successfully executed.");
+                        console.log("Server executed intent: " + result.response.command.intent);
+                        InterfaceService.handleEvent("success");
+                    }
+                    else {
+                        console.log("Command was rejected by server. Reason: " + result.response.result.error);
+                        InterfaceService.handleEvent("failed");
 
-
+                    }
+                })
+                .catch(err => {
+                    console.error("Failed to process command: " + err);
+                })
         }
     }
 }

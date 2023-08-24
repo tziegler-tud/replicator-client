@@ -345,9 +345,21 @@ class CommunicationService extends Service {
     }
 
     sendCommand(command){
-        this.currentServer.tcpSendCommand(command)
-            .then()
-            .catch()
+        let self = this;
+        return new Promise(function(resolve, reject){
+            self.currentServer.tcpSendCommand(command)
+                .then(result => {
+                    //result.result contains ["success", "failed"]
+                    //result.response contains server reponse
+                    resolve(result);
+                })
+                .catch(err => {
+                    //failed to send command
+                    console.error("Failed to send command to server.")
+                    reject(err);
+                })
+        })
+
     }
 
     findNetworkInterfaces(){
@@ -562,8 +574,10 @@ class Server {
                 // console.log(err.status);
                 // console.log(err.errName);
                 reject(err)
-
             });
+            socket.on("requestClientAction", function(data){
+                console.log("Server requested action: " + data);
+            })
             socket.connect();
         })
     }
@@ -704,6 +718,20 @@ class Server {
                         command: command,
                         clientId: self.clientId,
                     }
+                    socket.once("commandSuccessful", function(response){
+                        const result = {
+                            result: "success",
+                            response: response,
+                        }
+                        resolve(result);
+                    })
+                    socket.once("commandFailed", function(response){
+                        const result = {
+                            result: "failed",
+                            response: response,
+                        }
+                        resolve(result);
+                    })
                     socket.emit("processCommand", commandData);
                 })
                 .catch(err => {

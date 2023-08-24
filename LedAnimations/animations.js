@@ -134,7 +134,23 @@ fail.setAnimation(function(ledInterface, args, self){
             brightness: 0.2,
         })
         ledInterface.write();
-        clear(ledInterface,200);
+        clear(ledInterface,100);
+        setAll(ledInterface, {color: {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                },
+                brightness: 0.2,},
+            200)
+        clear(ledInterface,300);
+        setAll(ledInterface, {color: {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                },
+                brightness: 0.2,},
+            400)
+        clear(ledInterface,500);
         setAll(ledInterface, {color: {
                 r: 255,
                 g: 0,
@@ -149,12 +165,43 @@ fail.setAnimation(function(ledInterface, args, self){
     })
 })
 
+
+let notunderstood = new LedAnimation("fail", 1);
+notunderstood.setAnimation(function(ledInterface, args, self){
+    return new Promise(function(resolve, reject){
+        let leds = ledInterface.getLeds();
+        let i = 0;
+        ledInterface.setAll({
+            color: {
+                r: 255,
+                g: 0,
+                b: 0,
+            },
+            brightness: 0.2,
+        })
+        ledInterface.write();
+        clear(ledInterface,200);
+        setAll(ledInterface, {color: {
+                    r: 255,
+                    g: 0,
+                    b: 0,
+                },
+                brightness: 0.2,},
+            400)
+        clear(ledInterface,600);
+        setTimeout(function(){
+            resolve();
+        },800)
+    })
+})
+
 animations.ready = ready;
 animations.wake = wake;
 animations.working = working;
 animations.setup = setup;
 animations.success = success;
 animations.fail = fail;
+animations.notunderstood = notunderstood;
 
 
 var clear = function(ledInterface, delay){

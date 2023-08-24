@@ -150,8 +150,7 @@ export default class LedInterface extends Interface {
                 return animations.working.play(self, args)
                 break;
             case "notunderstood":
-                return animations.fail.play(self, args)
-                // animations.notunderstood.play(self, args)
+                return animations.notunderstood.play(self, args)
                 break;
             case "failed":
                 // animations.fail.play(self, {})

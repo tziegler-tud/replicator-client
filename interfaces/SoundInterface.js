@@ -44,12 +44,18 @@ export default class SoundInterface extends Interface {
             SETUPCOMPLETE: "power_up1_clean.wav",
             READY: "power_up1_clean.wav",
             WAKE: "communications_start_transmission.wav",
+            FAIL: "fail.wav",
+            NOTUNDERSTOOD: "notunderstood.wav",
+            SUCCESS: "communications_end_transmission.wav",
         }
 
         this.files  = {
             SETUPCOMPLETE: path.join(this.soundDirPath, this.sounds.SETUPCOMPLETE),
             READY: path.join(this.soundDirPath, this.sounds.READY),
             WAKE: path.join(this.soundDirPath, this.sounds.WAKE),
+            FAIL: path.join(this.soundDirPath, this.sounds.FAIL),
+            NOTUNDERSTOOD: path.join(this.soundDirPath, this.sounds.NOTUNDERSTOOD),
+            SUCCESS: path.join(this.soundDirPath, this.sounds.SUCCESS),
         }
         this.audioData = {
 
@@ -153,13 +159,13 @@ export default class SoundInterface extends Interface {
 
                 break;
             case "notunderstood":
-
+                return self.play(self.files.NOTUNDERSTOOD);
                 break;
             case "failed":
-
+                return self.play(self.files.FAIL);
                 break;
             case "success":
-
+                return self.play(self.files.SUCCESS);
                 break;
         }
     }
