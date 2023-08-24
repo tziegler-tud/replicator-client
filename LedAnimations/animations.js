@@ -80,6 +80,7 @@ setup.setAnimation(function(ledInterface, args, self){
                     if (i===ledInterface.ledAmount) {
                         clearInterval(ledInterface.interval);
                         setTimeout(function(){
+                            clear(ledInterface,1000);
                             resolve();
                         },1000);
                     }
