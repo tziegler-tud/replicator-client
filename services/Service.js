@@ -9,6 +9,7 @@ import SettingsService from "./SettingsService.js";
 export default class Service {
     constructor(){
         let self = this;
+        this.name = "unidentified Service";
         this.initStarted = false;
         this.status = this.statusEnum.NOTSTARTED;
 
@@ -17,6 +18,7 @@ export default class Service {
             self.rejectInit = reject;
         })
 
+        this.systemSettings = undefined;
         this.debugLabel = "Service: ";
         this.enableDebug = true;
     }
@@ -30,30 +32,49 @@ export default class Service {
      * @param args {Object} Arguments object forwarded to the initialization function.
      */
     start(args){
-        let self = this;
-        this.initStarted = true;
-        SettingsService.init.then(settings => {
-            this.initFunc(args)
-                .then(result => {
-                    self.status = self.statusEnum.RUNNING;
-                    self.resolveInit();
-                })
-                .catch(err => {
-                    self.status = self.statusEnum.FAILED;
-                    self.rejectInit();
-                });
-        })
-        return this.init;
+        console.log("Starting Service: " + this.name)
+        if(this.status === this.statusEnum.RUNNING) {
+            return new Promise((resolve, reject)=> {resolve(this.statusEnum.RUNNING)});
+        }
+        else {
+            let self = this;
+            this.initStarted = true;
+            SettingsService.init.then(settings => {
+                this.systemSettings = SettingsService.getSettings();
+                this.initFunc(args)
+                    .then(result => {
+                        self.status = self.statusEnum.RUNNING;
+                        self.resolveInit(self.status);
+                    })
+                    .catch(err => {
+                        self.status = self.statusEnum.FAILED;
+                        self.rejectInit(self.status);
+                    });
+            })
+            return this.init;
+        }
     }
 
     /**
      * stops the service
      */
     stop(){
-        this.stopService()
-            .then(()=>{
-                this.status = this.statusEnum.STOPPED;
-            })
+        console.log("Stopping Service: " + this.name)
+        const self = this;
+        return new Promise((outerResolve, outerReject)=> {
+            this.stopService()
+                .then(()=>{
+                    this.status = this.statusEnum.STOPPED;
+                    this.init = new Promise(function (resolve, reject) {
+                        self.resolveInit = resolve;
+                        self.rejectInit = reject;
+                    })
+                    outerResolve(self.status);
+                })
+                .catch(err => {
+                    outerReject(err);
+                })
+        })
     }
 
 
@@ -65,6 +86,12 @@ export default class Service {
     async stopService(){
         //implemented by child classes
         return true;
+    }
+
+    getState(){
+        return {
+            status: this.status,
+        }
     }
 
     statusEnum = {

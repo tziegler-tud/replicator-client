@@ -19,6 +19,9 @@ import SettingsService from "./services/SettingsService.js";
 
 import htmlRouter from './routes/html/index.js';
 import apiRouter from './routes/api/v1/index.js';
+import servicesRouter from './routes/api/v1/services.js';
+import ServerCommandService from "./services/ServerCommandService.js";
+
 
 
 
@@ -46,6 +49,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', htmlRouter);
 app.use('/api/v1/', apiRouter);
+app.use('/api/v1/services', servicesRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -79,13 +83,16 @@ let interfaceService = InterfaceService.start();
 
 
 
-const devices = PvRecorder.getAudioDevices();
+const devices = PvRecorder.getAvailableDevices();
 
 //start voice recognition service
 const voiceRecognitionService = VoiceRecognitionService.start();
 
+//start server command service
+const serverCommandService = ServerCommandService.start();
+
 //wait for all services to start
-Promise.all([settingsService, communicationService, voiceCommandService, interfaceService, voiceRecognitionService])
+Promise.all([settingsService, communicationService, voiceCommandService, interfaceService, voiceRecognitionService, serverCommandService])
     .then(results => {
       InterfaceService.handleEvent(InterfaceService.events.SETUPCOMPLETE);
     })

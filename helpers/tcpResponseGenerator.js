@@ -33,6 +33,11 @@ class tcpResponseGenerator {
      *  24: registration incomplete
      *  25: already registered
      *  26: registration not allowed
+     *
+     *  31-40 command errors
+     *   31: invalid command
+     *   32: invalid arguments received
+     *   33: Internal error
      */
 
     tpcResponse = {
@@ -101,6 +106,33 @@ class tcpResponseGenerator {
                 status: this.tcpStatus.ERROR,
                 code: 26,
                 message: "Registration not allowed.",
+            }
+        },
+        COMMAND: {
+            SUCCESSFULL: {
+                status: this.tcpStatus.OK,
+                code: 0,
+                message: "Command execution successfull."
+            },
+            INVALID: {
+                status: this.tcpStatus.UNAUTHORIZED,
+                code: 21,
+                message: "Invalid command received.",
+            },
+            INVALID_ARGUMENT: {
+                status: this.tcpStatus.ERROR,
+                code: 22,
+                message: "Invalid argument received.",
+            },
+            INTERNAL_ERROR: {
+                status: this.tcpStatus.UNAUTHORIZED,
+                code: 23,
+                message: "Internal error while executing command.",
+            },
+            NOTALLOWED: {
+                status: this.tcpStatus.ERROR,
+                code: 26,
+                message: "Command not allowed.",
             }
         }
     }

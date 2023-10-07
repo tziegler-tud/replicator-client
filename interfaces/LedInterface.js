@@ -128,6 +128,9 @@ export default class LedInterface extends Interface {
      * @returns {*}
      */
     handleEvent (eventTitle, args={}){
+        if(!this.isActive) return new Promise(function(resolve, reject){
+            reject("Interface inactive.")
+        })
         if(this.interval) {
             clearInterval(this.interval);
             this.interval = undefined;
