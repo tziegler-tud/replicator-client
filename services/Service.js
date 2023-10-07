@@ -44,10 +44,12 @@ export default class Service {
                 this.initFunc(args)
                     .then(result => {
                         self.status = self.statusEnum.RUNNING;
+                        console.log("System startup successfull: " + self.name);
                         self.resolveInit(self.status);
                     })
                     .catch(err => {
                         self.status = self.statusEnum.FAILED;
+                        console.error("ERROR: System startup failed: " + self.name);
                         self.rejectInit(self.status);
                     });
             })

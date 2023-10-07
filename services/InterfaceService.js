@@ -27,6 +27,8 @@ class InterfaceService extends Service {
     constructor(init=false){
         super();
         let self = this;
+        this.name = "InterfaceService";
+
 
         /**
          *

@@ -42,6 +42,7 @@ class CommunicationService extends Service {
     constructor() {
         super();
         let self = this;
+        this.name = "CommunicationService";
         this.knownServers = [];
         this.currentServer = undefined;
         this.isConnected = false;
