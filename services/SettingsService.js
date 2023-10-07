@@ -4,6 +4,8 @@ import * as fsPromises from 'node:fs/promises';
 import systemSettings from "../config/systemSettings.json" assert { type: 'json' };
 import path from "path";
 import {fileURLToPath} from "url";
+import {getObjectProp, setObjectProp} from "../helpers/utils.js";
+import VoiceRecognitionService from "./voiceRecognitionService.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -27,6 +29,11 @@ class SettingsService {
         this.defaultSettings = {
             system: {
                 debugLevel: 0
+            },
+            recording: {
+                porcupineSensitivity: 0.6,
+                rhinoSensitivity: 0.7,
+                endpointDurationSec: 0.6,
             }
         }
         return this;
@@ -59,7 +66,7 @@ class SettingsService {
             //try to load file from systemStore
             self.load()
                 .then(result=> {
-                    self.settings = Object.assign(result, systemSettings)
+                    self.settings = Object.assign(self.defaultSettings, result, systemSettings)
                     resolve(result)
                 })
                 .catch(err=> {
@@ -135,10 +142,18 @@ class SettingsService {
         return this.settings;
     }
 
+    getKey(key){
+        if(!key) return undefined;
+        return getObjectProp(this.settings, key);
+    }
+
     set({key, value}={}){
         if(!key) return false;
-        this.settings[key] = value;
+        setObjectProp(this.settings, value, key);
+        // this.settings[key] = value;
         this.save();
+        //restart recorder
+        VoiceRecognitionService.restart();
         return this.settings;
     }
 

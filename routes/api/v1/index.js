@@ -2,6 +2,7 @@ import express from 'express';
 var router = express.Router();
 
 import CommunicationService from "../../../services/CommunicationService.js";
+import SettingsService from "../../../services/SettingsService.js";
 
 
 /**
@@ -12,6 +13,8 @@ router.get("/", getClientInformation);
 router.post("/tcpTest", tcpTest);
 router.post("/requestAuthentication", connectToServer);
 
+router.get("/settings", getSettings);
+router.post("/settings", updateSettings);
 function getClientInformation(req, res, next){
 
 }
@@ -43,6 +46,20 @@ function connectToServer(req, res, next) {
       })
 
 }
+
+function getSettings(req, res, next){
+    const settings = SettingsService.getSettings();
+    res.json(settings)
+}
+
+function updateSettings(req, res, next) {
+    //server is asking us to connect via TCP
+    let data = req.body;
+    const result = SettingsService.set({key: req.body.key, value: req.body.value})
+    if(result) res.json(result);
+    else next(new Error("Failed to write Settings."));
+}
+
 
 
 export default router;

@@ -34,6 +34,9 @@ export default class Interface {
      * @returns {*}
      */
     handleEvent (eventTitle, args={}){
+        if(!this.isActive) return new Promise(function(resolve, reject){
+            reject("Interface inactive.")
+        })
         if(this.interval) {
             clearInterval(this.interval);
             this.interval = undefined;
@@ -73,5 +76,17 @@ export default class Interface {
      */
     active(){
         return this.isActive
+    }
+
+    activate(){
+        this.isActive = true;
+    }
+
+    deactivate(){
+        this.isActive = false;
+        if(this.interval) {
+            clearInterval(this.interval);
+            this.interval = undefined;
+        }
     }
 }

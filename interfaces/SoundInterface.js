@@ -132,8 +132,9 @@ export default class SoundInterface extends Interface {
      * @returns {*}
      */
     handleEvent (eventTitle, args={}){
-
-
+        if(!this.isActive) return new Promise(function(resolve, reject){
+            reject("Interface inactive.")
+        })
         if(this.interval) {
             clearInterval(this.interval);
             this.interval = undefined;
@@ -170,59 +171,49 @@ export default class SoundInterface extends Interface {
         }
     }
 
-    async playSoundAudic(audic){
-        // let self = this;
-        // await audic.play();
-        // audic.addEventListener("ended", () => {
-        //     // audic.destroy();
-        // })
-    }
-
-    playSound(filename){
-        let self = this;
-        const __dirname = path.dirname(fileURLToPath(import.meta.url));
-        let filepath = path.join(__dirname, '..', 'systemStore', 'sounds', filename);
-
-        return new Promise(function(resolve, reject){
-            fs.readFile(filepath, function(err, data){
-                if(err) {
-                    console.error("Failed to read file: " + filepath);
-                    reject();
-                }
-                else {
-                    // self.context.decodeAudioData(data, function(audioBuffer) {
-
-                        // self.context.outStream = new Speaker({
-                        //     channels:   self.context.format.numberOfChannels,
-                        //     bitDepth:   self.context.format.bitDepth,
-                        //     sampleRate: self.context.sampleRate
-                        // });
-                    //     self.context.outStream = process.stdout;
-                    //     // self.play(audioBuffer);
-                    //     resolve();
-                    // });
-                }
-            });
-
-
-        })
-
-    }
+    // async playSoundAudic(audic){
+    //     // let self = this;
+    //     // await audic.play();
+    //     // audic.addEventListener("ended", () => {
+    //     //     // audic.destroy();
+    //     // })
+    // }
+    //
+    // playSound(filename){
+    //     let self = this;
+    //     const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    //     let filepath = path.join(__dirname, '..', 'systemStore', 'sounds', filename);
+    //
+    //     return new Promise(function(resolve, reject){
+    //         fs.readFile(filepath, function(err, data){
+    //             if(err) {
+    //                 console.error("Failed to read file: " + filepath);
+    //                 reject();
+    //             }
+    //             else {
+    //                 // self.context.decodeAudioData(data, function(audioBuffer) {
+    //
+    //                     // self.context.outStream = new Speaker({
+    //                     //     channels:   self.context.format.numberOfChannels,
+    //                     //     bitDepth:   self.context.format.bitDepth,
+    //                     //     sampleRate: self.context.sampleRate
+    //                     // });
+    //                 //     self.context.outStream = process.stdout;
+    //                 //     // self.play(audioBuffer);
+    //                 //     resolve();
+    //                 // });
+    //             }
+    //         });
+    //
+    //
+    //     })
+    //
+    // }
 
     play(path){
         child_process.exec('aplay ' + path);
     }
 
-    play2(audioBuffer) {
-        // if (!audioBuffer) { return; }
-        // var bufferSource = this.context.createBufferSource();
-        // bufferSource.connect(this.context.destination);
-        // bufferSource.buffer = audioBuffer;
-        // bufferSource.loop   = false;
-        // bufferSource.start(0);
-        // this.context.pipe(this.speaker);
-        // this.context.resume();
-    }
 }
 
 

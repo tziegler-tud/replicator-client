@@ -10,6 +10,8 @@ import path from "path";
 import fs from "fs";
 import fsPromises from "node:fs/promises";
 import {fileURLToPath} from "url";
+import ServerCommandService from "./ServerCommandService.js";
+import InterfaceService from "./InterfaceService.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -563,6 +565,33 @@ class Server {
             socket.on("message", function(data){
                 console.log("Received message: " + data);
             })
+            socket.on("settings", function(data, callback){
+                const settings = SettingsService.getSettings();
+                callback(settings);
+            })
+            socket.on("interfaces", function(data, callback){
+                const interfaces = InterfaceService.getAll();
+                const response = interfaces.map(i => {
+                    return {type: i.type, active: i.interface.active()};
+                })
+                callback(response);
+            })
+            socket.on("updateSettings", function(data, callback){
+                const keys = Object.keys(data);
+                keys.forEach(key => {
+                    SettingsService.set({key: key, value: data[key]})
+                })
+                const settings = SettingsService.getSettings();
+                callback(settings);
+            })
+            socket.on("command", function(data, callback){
+                ServerCommandService.processCommand(data)
+                    .then(response => {
+                        callback(response)
+                    })
+                    .catch(err => callback(err))
+            })
+
             socket.on("disconnect", () => {
                 console.log(socket.id); // undefined
                 self.socket = undefined;

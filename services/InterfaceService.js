@@ -283,6 +283,10 @@ class InterfaceService extends Service {
         return this.interfaces.find(i => i.type === type);
     }
 
+    getAll(){
+        return this.interfaces;
+    }
+
     getLedInterface(){
         //check if interface exists;
         return this.ledInterface();
