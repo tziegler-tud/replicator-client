@@ -24,6 +24,9 @@ class SettingsService {
             self.rejectInit = reject;
         })
 
+        this.name = "SettingsService";
+
+
         this.debugLabel = "SettingsService: ";
         this.settings = {};
         this.defaultSettings = {
@@ -45,10 +48,12 @@ class SettingsService {
         this.initFunc(args)
             .then(result => {
                 self.status = self.statusEnum.RUNNING;
+                console.log("System startup successfull: " + self.name);
                 self.resolveInit();
             })
             .catch(err => {
                 self.status = self.statusEnum.FAILED;
+                console.error("ERROR: System startup failed: " + self.name);
                 self.rejectInit();
             });
         return this.init;

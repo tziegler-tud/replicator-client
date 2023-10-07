@@ -18,6 +18,7 @@ import Service from "./Service.js";
 class VoiceCommandService extends Service {
     constructor(){
         super();
+        this.name = "VoiceCommandService";
         this.mutex = false;
     }
 
