@@ -142,7 +142,8 @@ context:
       - next @musicSong
     TemperatureState:
       - "@request (the) (@this) (room) Temperature"
-    HumidityState: []
+    HumidityState:
+      - "@request (the) (@this) (room) humidity"
     ClimateState:
       - "@request (the) (@this) (room) climate"
     startTransmission:
@@ -156,8 +157,10 @@ context:
       - start recording
     playRecording:
       - play (last) recording
-    addLog: []
-    playLog: []
+    addLog:
+      - add log (entry)
+    playLog:
+      - play (last) log
   slots:
     color:
       - blue
@@ -172,6 +175,7 @@ context:
       - off
       - on
     location:
+      - kitchen
       - bedroom
       - living room
       - everywhere

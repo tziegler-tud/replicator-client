@@ -210,8 +210,25 @@ export default class SoundInterface extends Interface {
     //
     // }
 
-    play(path){
-        child_process.exec('aplay ' + path);
+    // play(path){
+    //     this._playViaAplay("", path);
+    // }
+
+    play({path, duration, delay}){
+        let args = "";
+        if(duration) args += "-d " + duration
+        if(delay){
+            setTimeout(()=>{
+                this._play(args, path)
+            }, delay)
+        }
+        else {
+            this._play(args, path)
+        }
+    }
+
+    _play(args, path){
+        child_process.exec('aplay ' + args + path);
     }
 
 }
