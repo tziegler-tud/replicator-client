@@ -214,7 +214,7 @@ export default class SoundInterface extends Interface {
     //     this._playViaAplay("", path);
     // }
 
-    play(path, {duration, delay}){
+    play(path, {duration, delay}={}){
         let args = "";
         if(duration) args += "-d " + duration
         if(delay){
