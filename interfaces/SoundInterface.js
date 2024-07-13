@@ -214,6 +214,14 @@ export default class SoundInterface extends Interface {
     //     this._playViaAplay("", path);
     // }
 
+    playAudioStream(url, {duration, delay}={}){
+        this._stream(url, {duration, delay});
+    }
+
+    playFilename(filename, {duration, delay}={}){
+        this.play(path.join(this.soundDirPath, filename), {duration, delay});
+    }
+
     play(path, {duration, delay}={}){
         let args = "";
         if(duration) args += "-d " + duration
@@ -231,6 +239,9 @@ export default class SoundInterface extends Interface {
         child_process.exec('aplay ' + args + path);
     }
 
+    _stream(src, args){
+        child_process.exec('curl ' + src + ' | aplay ' + args);
+    }
 }
 
 
