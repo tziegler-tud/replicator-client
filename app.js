@@ -21,6 +21,7 @@ import htmlRouter from './routes/html/index.js';
 import apiRouter from './routes/api/v1/index.js';
 import servicesRouter from './routes/api/v1/services.js';
 import ServerCommandService from "./services/ServerCommandService.js";
+import ServerActionService from "./services/ServerActionService.js";
 
 
 
@@ -90,9 +91,10 @@ const voiceRecognitionService = VoiceRecognitionService.start();
 
 //start server command service
 const serverCommandService = ServerCommandService.start();
+const serverActionService = ServerActionService.start();
 
 //wait for all services to start
-Promise.all([settingsService, communicationService, voiceCommandService, interfaceService, voiceRecognitionService, serverCommandService])
+Promise.all([settingsService, communicationService, voiceCommandService, interfaceService, voiceRecognitionService, serverCommandService, serverActionService])
     .then(results => {
       InterfaceService.handleEvent(InterfaceService.events.SETUPCOMPLETE);
     })

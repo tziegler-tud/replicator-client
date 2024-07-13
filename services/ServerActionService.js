@@ -44,7 +44,10 @@ class ServerActionService extends Service {
                 const soundInterface = InterfaceService.getInterfaceByType(InterfaceService.types.SOUND);
                 switch(data.command){
                     case "playSoundLocal":
-                        if(soundInterface.interface.active()) soundInterface.playFilename(data.filename)
+                        if(soundInterface.interface.active()) {
+                            soundInterface.interface.playFilename(data.filename, {duration: data.duration, delay: data.delay});
+                            resolve();
+                        }
                         else reject("SoundInterface disabled.")
                         break;
                     case "playAudioStream":
@@ -63,4 +66,4 @@ class ServerActionService extends Service {
     }
 }
 
-export default new ServerCommandService();
+export default new ServerActionService();

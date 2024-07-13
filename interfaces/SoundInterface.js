@@ -224,11 +224,11 @@ export default class SoundInterface extends Interface {
 
     play(path, {duration, delay}={}){
         let args = "";
-        if(duration) args += "-d " + duration
-        if(delay){
+        if(duration > 0) args += "-d " + duration
+        if(delay > 0){
             setTimeout(()=>{
                 this._play(args, path)
-            }, delay)
+            }, delay*1000)
         }
         else {
             this._play(args, path)
@@ -236,7 +236,7 @@ export default class SoundInterface extends Interface {
     }
 
     _play(args, path){
-        child_process.exec('aplay ' + args + path);
+        child_process.exec('aplay ' + args + " " + path);
     }
 
     _stream(src, args){
