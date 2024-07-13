@@ -12,6 +12,7 @@ import fsPromises from "node:fs/promises";
 import {fileURLToPath} from "url";
 import ServerCommandService from "./ServerCommandService.js";
 import InterfaceService from "./InterfaceService.js";
+import ServerActionService from "./ServerActionService.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -587,6 +588,14 @@ class Server {
             })
             socket.on("command", function(data, callback){
                 ServerCommandService.processCommand(data)
+                    .then(response => {
+                        callback(response)
+                    })
+                    .catch(err => callback(err))
+            })
+
+            socket.on("action", function(data, callback){
+                ServerActionService.handle(data)
                     .then(response => {
                         callback(response)
                     })
