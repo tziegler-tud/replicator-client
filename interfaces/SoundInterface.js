@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';
 import child_process from 'node:child_process';
+import ReplicatorInterface from "./ReplicatorInterface.js";
 // import Audic from "audic";
 // const AudioContext = audioApi.StreamAudioContext;
 
@@ -20,7 +21,7 @@ rpio.init( {
  * @param {Number} [clockDivider]
  * @constructor
  */
-export default class SoundInterface extends Interface {
+export default class SoundInterface extends ReplicatorInterface {
     constructor () {
 
         super();

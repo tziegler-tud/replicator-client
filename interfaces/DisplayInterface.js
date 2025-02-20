@@ -1,5 +1,6 @@
 import Interface from "./Interface.js";
 import rpio from'rpio';
+import ReplicatorInterface from "./ReplicatorInterface.js";
 
 rpio.init( {
     gpiomem: false,
@@ -12,7 +13,7 @@ rpio.init( {
  * @param {Number} [clockDivider]
  * @constructor
  */
-export default class DisplayInterface extends Interface {
+export default class DisplayInterface extends ReplicatorInterface {
     constructor () {
 
         super();

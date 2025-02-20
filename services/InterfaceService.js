@@ -1,4 +1,4 @@
-import Interface from "../interfaces/Interface.js";
+import Interface from "../interfaces/ReplicatorInterface.js";
 import LedInterface from "../interfaces/LedInterface.js";
 import SoundInterface from "../interfaces/SoundInterface.js";
 import DisplayInterface from "../interfaces/DisplayInterface.js";
@@ -32,7 +32,7 @@ class InterfaceService extends Service {
 
         /**
          *
-         * @type {{type: String, interface: Interface}[]}
+         * @type {{type: String, interface: ReplicatorInterface}[]}
          */
         this.interfaces = [];
         this.ledInterface = undefined;
@@ -46,15 +46,14 @@ class InterfaceService extends Service {
     }
 
     initFunc(){
-        let self = this;
-        return new Promise(function(resolve, reject){
+        return new Promise((resolve, reject) => {
             console.log("Initializing InterfaceService...");
             let errMsg = "Failed to initialize InterfaceService:";
             //load config
-            if(Array.isArray(self.interfaceConfig.interfaces)) {
+            if(Array.isArray(this.interfaceConfig.interfaces)) {
                 let loaderPromises = [];
-                self.interfaceConfig.interfaces.forEach(interfaceConfigObject => {
-                    loaderPromises.push(self.loadInterfaceFromConfig(interfaceConfigObject));
+                this.interfaceConfig.interfaces.forEach(interfaceConfigObject => {
+                    loaderPromises.push(this.loadInterfaceFromConfig(interfaceConfigObject));
                 })
                 Promise.all(loaderPromises)
                     .then(result => {
@@ -155,7 +154,7 @@ class InterfaceService extends Service {
      *
      * @param interfaceFilter {Object}
      * @param interfaceFilter.type {String} include or exclude. Note that include + empty filter returns all results, while exclude + empty returns no results
-     * @returns {{type: String, interface: Interface}[]}
+     * @returns {{type: String, interface: ReplicatorInterface}[]}
      */
     filterInterfaces(interfaceFilter={type: "include", filter: []}){
         let filter = [];
@@ -200,10 +199,9 @@ class InterfaceService extends Service {
     }
 
     addLedInterface({constructorArgs={}, overwrite=false}={}){
-        let self = this;
         const type = this.types.LED;
-        return new Promise(function(resolve, reject){
-            if(self.getInterfaceByType(type)) {
+        return new Promise((resolve, reject) => {
+            if(this.getInterfaceByType(type)) {
                 console.warn("Warning: " + type + "already added.");
                 if(!overwrite) reject();
                 console.warn("Overwriting " + type);
@@ -212,8 +210,8 @@ class InterfaceService extends Service {
             ledInterface.init
                 .then(ledIf=> {
                     console.log(type + " added");
-                    self.ledInterface = ledInterface;
-                    self.interfaces.push({type: type, interface: ledInterface})
+                    this.ledInterface = ledInterface;
+                    this.interfaces.push({type: type, interface: ledInterface})
                     resolve(ledInterface);
 
                 })
@@ -225,10 +223,9 @@ class InterfaceService extends Service {
     }
 
     addSoundInterface({constructorArgs={}, overwrite=false}={}){
-        let self = this;
         const type = this.types.SOUND;
-        return new Promise(function(resolve, reject){
-            if(self.getInterfaceByType(type)) {
+        return new Promise((resolve, reject) => {
+            if(this.getInterfaceByType(type)) {
                 console.warn("Warning: " + type + "already added.");
                 if(!overwrite) reject();
                 console.warn("Overwriting " + type);
@@ -237,8 +234,8 @@ class InterfaceService extends Service {
             soundInterface.init
                 .then(soundIf=> {
                     console.log(type + " added");
-                    self.ledInterface = soundInterface;
-                    self.interfaces.push({type: type, interface: soundInterface})
+                    this.soundInterface = soundInterface;
+                    this.interfaces.push({type: type, interface: soundInterface})
                     resolve(soundInterface);
                 })
                 .catch(err => {
@@ -249,9 +246,8 @@ class InterfaceService extends Service {
     }
 
     addDisplayInterface({constructorArgs={}, overwrite=false}={}){
-        let self = this;
         const type = this.types.DISPLAY;
-        return new Promise(function(resolve, reject){
+        return new Promise((resolve, reject) => {
             if(self.getInterfaceByType(type)) {
                 console.warn("Warning: " + type + "already added.");
                 if(!overwrite) reject();
@@ -261,8 +257,8 @@ class InterfaceService extends Service {
             displayInterface.init
                 .then(dispIf=> {
                     console.log(type + " added");
-                    self.displayInterface = displayInterface;
-                    self.interfaces.push({type: type, interface: displayInterface})
+                    this.displayInterface = displayInterface;
+                    this.interfaces.push({type: type, interface: displayInterface})
                     resolve(displayInterface);
                 })
                 .catch(err => {
@@ -281,17 +277,39 @@ class InterfaceService extends Service {
         })
     }
 
+    /**
+     *
+     * @param {InterfaceType} type
+     * @returns ReplicatorInterface
+     */
     getInterfaceByType(type){
-        return this.interfaces.find(i => i.type === type);
+        switch(type) {
+            case this.types.LED:
+                return this.ledInterface
+            case this.types.SOUND:
+                return this.soundInterface
+            case this.types.DISPLAY:
+                return this.displayInterface
+            default:
+                return undefined;
+        }
+    }
+
+
+    /**
+     *
+     * @returns {{type: String, interface: SoundInterface}}
+     */
+    getSoundInterface(){
+        return this.soundInterface
+    }
+
+    getLedInterface(){
+        return this.ledInterface;
     }
 
     getAll(){
         return this.interfaces;
-    }
-
-    getLedInterface(){
-        //check if interface exists;
-        return this.ledInterface();
     }
 
     events = {
