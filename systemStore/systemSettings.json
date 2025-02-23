@@ -1,1 +1,1 @@
-{"system":{"debugLevel":0},"recording":{"porcupineSensitivity":"0.8","endpointDurationSec":"0.6","rhinoSensitivity":"0.9"},"identifier":"Replicator-Client-1678320968828","version":"replicator-client 0.0.1a"}
+{"system":{"debugLevel":0},"recording":{"porcupineSensitivity":"0.8","rhinoSensitivity":"0.9","endpointDurationSec":"0.6"},"identifier":"Replicator-Client-1678320968828","version":"replicator-client 0.1.0"}

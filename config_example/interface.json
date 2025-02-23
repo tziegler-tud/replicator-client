@@ -1,6 +1,12 @@
 {
   "interfaces": [
     {
+      "type": "LedInterface",
+      "constructorArgs": {
+        "ledAmount": 12
+      }
+    },
+    {
       "type": "SoundInterface",
       "constructorArgs": {
 

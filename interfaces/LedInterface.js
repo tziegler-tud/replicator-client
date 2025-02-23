@@ -1,4 +1,3 @@
-import Interface from "./Interface.js";
 import rpio from'rpio';
 import animations from "../LedAnimations/animations.js";
 

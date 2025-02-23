@@ -35,8 +35,20 @@ class InterfaceService extends Service {
          * @type {{type: String, interface: ReplicatorInterface}[]}
          */
         this.interfaces = [];
+        /**
+         *
+         * @type {LedInterface}
+         */
         this.ledInterface = undefined;
+        /**
+         *
+         * @type {SoundInterface}
+         */
         this.soundInterface = undefined;
+        /**
+         *
+         * @type {DisplayInterface}
+         */
         this.displayInterface = undefined;
         /**
          *
@@ -298,7 +310,7 @@ class InterfaceService extends Service {
 
     /**
      *
-     * @returns {{type: String, interface: SoundInterface}}
+     * @returns {SoundInterface}
      */
     getSoundInterface(){
         return this.soundInterface
