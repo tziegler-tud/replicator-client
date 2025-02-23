@@ -3,9 +3,9 @@
  * @constructor
  *
  * @param isActive {Boolean}
- * @param init {Promise<Interface|Error>}
+ * @param init {Promise<ReplicatorInterface|Error>}
  */
-export default class Interface {
+export default class ReplicatorInterface {
     constructor() {
         /**
          *

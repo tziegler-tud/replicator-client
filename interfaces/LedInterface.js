@@ -1,8 +1,8 @@
-import Interface from "./Interface.js";
 import rpio from'rpio';
 import animations from "../LedAnimations/animations.js";
 
 import Led from "./Led.js";
+import ReplicatorInterface from "./ReplicatorInterface.js";
 
 rpio.init( {
     gpiomem: false,
@@ -15,7 +15,7 @@ rpio.init( {
  * @param {Number} [clockDivider]
  * @constructor
  */
-export default class LedInterface extends Interface {
+export default class LedInterface extends ReplicatorInterface {
     constructor ({ledAmount=12, clockDivider=128}) {
 
         super();

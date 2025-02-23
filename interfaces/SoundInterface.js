@@ -1,13 +1,9 @@
-import Interface from "./Interface.js";
-// import Speaker from 'speaker';
-// import audioApi from 'web-audio-engine';
 import rpio from'rpio';
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from 'url';
 import child_process from 'node:child_process';
-// import Audic from "audic";
-// const AudioContext = audioApi.StreamAudioContext;
+import ReplicatorInterface from "./ReplicatorInterface.js";
 
 rpio.init( {
     gpiomem: false,
@@ -20,7 +16,7 @@ rpio.init( {
  * @param {Number} [clockDivider]
  * @constructor
  */
-export default class SoundInterface extends Interface {
+export default class SoundInterface extends ReplicatorInterface {
     constructor () {
 
         super();
@@ -215,7 +211,16 @@ export default class SoundInterface extends Interface {
     // }
 
     playAudioStream(url, {duration, delay}={}){
-        this._stream(url, {duration, delay});
+        let args = "";
+        if(duration > 0) args += "-d " + duration
+        if(delay > 0){
+            setTimeout(()=>{
+                this._stream(args, url);
+            }, delay*1000)
+        }
+        else {
+            this._stream(args, url);
+        }
     }
 
     playFilename(filename, {duration, delay}={}){
@@ -235,11 +240,21 @@ export default class SoundInterface extends Interface {
         }
     }
 
+    /**
+     * @param {String} args
+     * @param {String} path
+     * @private
+     */
     _play(args, path){
         child_process.exec('aplay ' + args + " " + path);
     }
 
-    _stream(src, args){
+    /**
+     * @param {String} args
+     * @param {String} src
+     * @private
+     */
+    _stream(args, src){
         child_process.exec('curl ' + src + ' | aplay ' + args);
     }
 }
