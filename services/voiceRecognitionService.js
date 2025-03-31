@@ -57,17 +57,24 @@ class VoiceRecognitionService extends Service {
             VoiceCommandService.processCommand(inference);
 
         };
+        try {
+            this.picovoice= new Picovoice(
+                self.picoVoiceConfig.accessKey,
+                self.picoVoiceConfig.keywordArgument,
+                keywordCallback,
+                self.picoVoiceConfig.contextPath,
+                inferenceCallback,
+                parseFloat(self.systemSettings.recording.porcupineSensitivity), //porcupine sensitivity
+                parseFloat(self.systemSettings.recording.rhinoSensitivity), // rhino sensitivity
+                parseFloat(self.systemSettings.recording.endpointDurationSec)
+            );
+        }
+        catch(e){
+            console.error(e);
+            throw new Error(e);
+        }
         //initalize new picovoice rt-obj
-        this.picovoice= new Picovoice(
-            self.picoVoiceConfig.accessKey,
-            self.picoVoiceConfig.keywordArgument,
-            keywordCallback,
-            self.picoVoiceConfig.contextPath,
-            inferenceCallback,
-            parseFloat(self.systemSettings.recording.porcupineSensitivity), //porcupine sensitivity
-            parseFloat(self.systemSettings.recording.rhinoSensitivity), // rhino sensitivity
-            parseFloat(self.systemSettings.recording.endpointDurationSec)
-        );
+
         // noinspection JSValidateTypes
         return new PvRecorder(this.picovoice.frameLength, recorderDeviceIndex);
     }
