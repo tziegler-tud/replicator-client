@@ -551,11 +551,13 @@ class Server {
                 const msg = errMsg + "No clientId found."
                 reject(msg);
             }
+            const settings = SettingsService.getSettings();
             const options = {
                 auth: {
                     clientId: self.clientId
                 },
             }
+
             const socket = io("http://" + self.endpoints.tcp.address + ":" + self.endpoints.tcp.port, options);
             socket.on("connect", () => {
                 console.log(socket.id); // x8WIv7-mJelg7on_ALbx
@@ -566,6 +568,15 @@ class Server {
             });
             socket.on("message", function(data){
                 console.log("Received message: " + data);
+            })
+            socket.on("info", function(data, callback){
+                const settings = SettingsService.getSettings();
+                const info = {
+                    identifier: settings.identifier,
+                    url: self.clientUrl,
+                    version: settings.version,
+                }
+                callback(info);
             })
             socket.on("settings", function(data, callback){
                 const settings = SettingsService.getSettings();
